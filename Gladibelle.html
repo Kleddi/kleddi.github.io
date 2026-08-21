@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  HOW TO MAKE THIS YOURS
+  ============================================================
+  Scroll down to the "CONFIG" object near the top of the
+  <script> tag at the bottom of this file. Everything you'll
+  want to personalize lives there:
+
+    - herName, tagline
+    - whyText, whoText   (the story page)
+    - songs[]            (title, artist, and optionally a real
+                           audio "src" url/mp3 path — leave src
+                           empty to keep it as a pretty visualizer)
+    - letterBody         (your message, plain text, keep \n for
+                           new paragraphs)
+    - photoUrls          (paths/URLs to four photos of you two)
+    - bouquetUrl         (path/URL to a real bouquet photo —
+                           leave empty to keep the illustration)
+    - togetherSince      ("YYYY-MM-DD" — powers the day counter)
+    - yourName           (signature)
+
+  HOW NAVIGATION WORKS
+  ------------------------------------------------------------
+  This is a "hub": the home screen shows tappable tiles
+  (Story, Music, Letter, Us, Bouquet). Tapping one jumps
+  straight to that page — no scrolling required. Every inner
+  page has a "back" button at the top that returns to the hub.
+
+  Everything else (layout, animation, colors) just works.
+  ============================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>for you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Outfit:wght@300;400;500;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep: #060d16;
+    --bg-deep-2: #0a1520;
+    --bg-panel: #0f1f30;
+    --bg-panel-soft: #142a40;
+    --accent: #007FFF;
+    --accent-deep: #0058bf;
+    --accent-light: #66b3ff;
+    --gray: #808080;
+    --gray-light: #b7c1cc;
+    --text-soft: #eef4fb;
+    --text-dim: #93a6ba;
+    --line: rgba(238,244,251,0.12);
+    --shadow: 0 20px 60px rgba(0,8,20,0.55);
+    --page-gutter: clamp(20px, 4vw, 40px);
+    --page-space: clamp(72px, 9vw, 96px);
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background: var(--bg-deep);
+    color: var(--text-soft);
+    font-family:'Outfit', sans-serif;
+    font-weight:400;
+    overflow-x:hidden;
+  }
+
+  h1,h2,h3{ font-family:'Playfair Display', serif; margin:0; font-weight:600; }
+  .script{ font-family:'Caveat', cursive; }
+
+  ::selection{ background: var(--accent-deep); color:#eef4fb; }
+
+  a{ color: inherit; }
+  button{ font-family: inherit; }
+
+  /* ---------- ambient starfield + petals (shared background) ---------- */
+  #ambient{
+    position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+  }
+  .star{
+    position:absolute; width:2px; height:2px; border-radius:50%;
+    background: var(--text-soft); opacity:.5;
+    animation: twinkle 4.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:.15;} 50%{opacity:.85;} }
+
+  .petal{
+    position:absolute; top:-5%; font-size:14px; opacity:.5;
+    animation: fall linear infinite;
+    filter: drop-shadow(0 0 6px rgba(0,127,255,.3));
+  }
+  @keyframes fall{
+    0%{ transform: translate(0,0) rotate(0deg); }
+    100%{ transform: translate(30px, 115vh) rotate(200deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .petal, .star{ animation: none !important; }
+    html{ scroll-behavior:auto; }
+  }
+
+  /* ---------- welcome lock: keeps the whole little world a surprise ---------- */
+  #welcome-lock{
+    position:fixed; inset:0; z-index:200; overflow:hidden;
+    display:grid; place-items:center; padding:24px;
+    background:
+      radial-gradient(circle at 18% 18%, rgba(102,179,255,.16), transparent 26%),
+      radial-gradient(circle at 83% 80%, rgba(0,127,255,.13), transparent 30%),
+      linear-gradient(145deg, rgba(6,13,22,.985), rgba(10,21,32,.98) 54%, rgba(15,31,48,.99));
+    transition: opacity .75s ease, visibility .75s step-end;
+  }
+  #welcome-lock::before{
+    content:''; position:absolute; inset:0; pointer-events:none; opacity:.72;
+    background-image:
+      radial-gradient(circle at 11% 24%, var(--text-soft) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 27% 70%, var(--accent-light) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 43% 13%, var(--text-soft) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 64% 37%, var(--accent-light) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 78% 16%, var(--text-soft) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 91% 68%, var(--accent-light) 0 1px, transparent 1.8px),
+      radial-gradient(circle at 8% 86%, var(--text-soft) 0 1px, transparent 1.8px);
+  }
+  #welcome-lock::after{
+    content:''; position:absolute; width:min(86vw, 650px); aspect-ratio:1; border-radius:50%;
+    border:1px solid rgba(102,179,255,.08); box-shadow:0 0 0 52px rgba(102,179,255,.025), 0 0 90px rgba(0,127,255,.12);
+    animation: lockBreathe 5s ease-in-out infinite; pointer-events:none;
+  }
+  #welcome-lock.unlocking{ opacity:0; visibility:hidden; }
+  @keyframes lockBreathe{ 50%{ transform:scale(1.07); opacity:.65; } }
+  .lock-card{
+    width:min(100%, 395px); position:relative; z-index:1; text-align:center;
+    padding:clamp(27px, 5vw, 38px); border:1px solid rgba(102,179,255,.28); border-radius:26px;
+    background:linear-gradient(155deg, rgba(20,42,64,.86), rgba(15,31,48,.9) 52%, rgba(6,13,22,.94));
+    box-shadow:0 26px 75px rgba(0,0,0,.47), inset 0 1px 0 rgba(255,255,255,.05);
+    backdrop-filter:blur(16px);
+  }
+  .lock-crest{
+    width:55px; height:55px; margin:0 auto 18px; border-radius:50%; display:grid; place-items:center;
+    color:var(--text-soft); background:linear-gradient(135deg, var(--accent-deep), var(--accent));
+    border:1px solid rgba(102,179,255,.65); box-shadow:0 0 0 7px rgba(0,127,255,.11), 0 10px 24px rgba(0,60,135,.36);
+  }
+  .lock-crest svg{ width:24px; height:24px; }
+  .lock-kicker{ display:block; color:var(--accent-light); font:1.3rem 'Caveat', cursive; margin-bottom:1px; }
+  .lock-card h2{ font-size:clamp(1.55rem, 5vw, 2rem); font-style:italic; }
+  .lock-card p{ margin:7px auto 23px; color:var(--text-dim); font-size:.88rem; line-height:1.55; }
+  .lock-dots{ display:flex; justify-content:center; gap:15px; margin-bottom:23px; }
+  .lock-dot{
+    width:11px; height:11px; border-radius:50%; border:1.5px solid var(--text-dim); transition:.17s ease;
+    box-shadow:0 0 0 transparent;
+  }
+  .lock-dot.filled{ background:var(--accent-light); border-color:var(--accent-light); box-shadow:0 0 11px rgba(102,179,255,.7); transform:scale(1.12); }
+  .lock-dots.error{ animation:lockShake .42s ease; }
+  .lock-dots.error .lock-dot{ background:#e7778d; border-color:#e7778d; box-shadow:0 0 10px rgba(231,119,141,.4); }
+  @keyframes lockShake{ 20%{transform:translateX(-8px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(3px)} }
+  .lock-keypad{ display:grid; grid-template-columns:repeat(3, 62px); justify-content:center; gap:10px; }
+  .lock-key{
+    width:62px; aspect-ratio:1; display:grid; place-items:center; border:1px solid var(--line); border-radius:18px;
+    color:var(--text-soft); background:rgba(6,13,22,.33); cursor:pointer; font:500 1.1rem 'Outfit', sans-serif;
+    transition:transform .16s ease, background .16s ease, border-color .16s ease, color .16s ease;
+  }
+  .lock-key:hover{ background:rgba(0,127,255,.16); border-color:rgba(102,179,255,.52); }
+  .lock-key:active{ transform:scale(.91); background:rgba(0,127,255,.3); }
+  .lock-key:focus-visible{ outline:2px solid var(--accent-light); outline-offset:3px; }
+  .lock-key.blank{ visibility:hidden; pointer-events:none; }
+  .lock-key.delete{ color:var(--text-dim); }
+  .lock-key.delete svg{ width:20px; height:20px; }
+  .lock-hint{ margin:20px 0 0; color:var(--gray-light); font:1rem 'Caveat', cursive; opacity:.85; }
+  @media (max-width:420px){ .lock-card{ padding:26px 21px; border-radius:22px; } .lock-keypad{ grid-template-columns:repeat(3, 58px); } .lock-key{ width:58px; border-radius:16px; } }
+  @media (prefers-reduced-motion: reduce){ #welcome-lock::after{ animation:none; } }
+
+  /* ---------- page framework (hub + pages, no scroll-nav) ---------- */
+  .page{ position:relative; z-index:1; display:none; min-height:100svh; }
+  .page.active{ display:block; animation: pagein .45s ease both; }
+  @keyframes pagein{ from{ opacity:0; transform: translateY(14px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .page.active{ animation:none; } }
+
+  .wrap{ max-width:1040px; margin:0 auto; padding:var(--page-space) var(--page-gutter); }
+  .kicker{
+    font-family:'Caveat', cursive; color: var(--accent-light); font-size:1.4rem;
+    display:block; margin-bottom:6px;
+  }
+  .heading{ font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom:44px; }
+
+  /* ---------- back button ---------- */
+  .backBtn{
+    position:fixed; top:22px; left:22px; z-index:40;
+    display:flex; align-items:center; gap:8px;
+    background: rgba(15,31,48,.75); backdrop-filter: blur(6px);
+    border:1px solid var(--line); color: var(--text-soft);
+    padding:10px 16px 10px 12px; border-radius:999px; cursor:pointer;
+    font-size:.85rem; letter-spacing:.02em; transition: .25s;
+  }
+  .backBtn:hover{ border-color: var(--accent); background: rgba(0,127,255,.15); }
+  .backBtn svg{ width:16px; height:16px; }
+  @media (max-width:600px){ .backBtn{ top:14px; left:14px; padding:9px 14px 9px 10px; font-size:.8rem; } }
+
+  /* ---------- HUB ---------- */
+  #page-hub .hub-inner{
+    min-height:100svh; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; padding:clamp(48px, 7vw, 64px) var(--page-gutter);
+  }
+  .eyebrow{
+    letter-spacing:.35em; text-transform:uppercase; font-size:11px;
+    color: var(--gray-light); margin-bottom:18px; opacity:.9;
+  }
+  #page-hub h1{
+    font-size: clamp(2.4rem, 8vw, 4.6rem);
+    font-style: italic;
+    background: linear-gradient(100deg, var(--gray-light), var(--accent) 55%, var(--accent-light));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    line-height:1.05; margin-bottom:18px;
+  }
+  #page-hub .tagline{
+    font-family:'Caveat', cursive; font-size: clamp(1.2rem, 3vw, 1.7rem);
+    color: var(--text-dim); max-width:480px; margin:0 auto 24px;
+  }
+  .daily-note{
+    width:100%; max-width:760px; margin:0 auto 34px; padding:26px 30px 28px; text-align:left;
+    background:linear-gradient(135deg, rgba(0,127,255,.18), rgba(15,31,48,.94) 55%, rgba(20,42,64,.94));
+    border:1px solid rgba(102,179,255,.35); border-radius:20px; box-shadow:var(--shadow); position:relative;
+    overflow:hidden;
+  }
+  .daily-note::before{
+    content:'✦'; position:absolute; right:24px; top:16px; color:var(--accent-light); font-size:1.5rem; opacity:.75;
+  }
+  .daily-note .note-kicker{
+    color:var(--accent-light); font-family:'Caveat', cursive; font-size:1.25rem; display:block; margin-bottom:2px;
+  }
+  .daily-note .note-date{ color:var(--gray-light); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; }
+  .daily-note .note-count{ color:var(--accent-light); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; margin-left:10px; }
+  .daily-note .note-message{
+    margin:16px 0 0; max-width:640px; color:var(--text-soft); font-family:'Playfair Display',serif;
+    font-size:clamp(1.05rem, 2.2vw, 1.3rem); font-style:italic; line-height:1.6; white-space:pre-line;
+  }
+  .note-grid{ width:100%; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; }
+  .note-entry{
+    min-height:150px; padding:22px; border:1px solid var(--line); border-radius:16px;
+    background:linear-gradient(160deg, var(--bg-panel), var(--bg-panel-soft)); box-shadow:0 10px 30px rgba(0,8,20,.25);
+  }
+  .note-entry .day{ color:var(--accent-light); font-family:'Caveat',cursive; font-size:1.3rem; display:block; }
+  .note-entry .date{ color:var(--gray-light); font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; display:block; margin-top:2px; }
+  .note-entry p{ color:var(--text-soft); font-family:'Playfair Display',serif; font-style:italic; font-size:.98rem; line-height:1.6; white-space:pre-line; margin:15px 0 0; }
+  @media (max-width:600px){
+    .daily-note{ padding:22px 22px 24px; margin-bottom:26px; }
+    .daily-note::before{ right:17px; top:12px; }
+    .note-grid{ grid-template-columns:1fr; gap:12px; }
+    .note-entry{ min-height:0; padding:20px; }
+  }
+  #daily-page{ min-height:100svh; }
+  #daily-page .daily-note{ max-width:100%; margin:0 auto 24px; }
+
+  /* ---------- daily-note reminder ---------- */
+  #daily-intro-page{
+    min-height:100svh; display:flex; align-items:center; justify-content:center;
+  }
+  .daily-intro-card{
+    width:100%; max-width:620px; padding:clamp(32px, 7vw, 58px); text-align:center;
+    background:linear-gradient(145deg, rgba(6,13,22,.98), rgba(15,31,48,.98) 55%, rgba(20,42,64,.98));
+    border:1px solid rgba(102,179,255,.3); border-radius:22px; box-shadow:var(--shadow);
+  }
+  .daily-intro-card .intro-icon{
+    width:56px; height:56px; margin:0 auto 22px; border-radius:50%; display:grid; place-items:center;
+    background:linear-gradient(135deg, var(--accent-deep), var(--accent)); color:#fff;
+  }
+  .daily-intro-card .intro-icon svg{ width:26px; height:26px; }
+  .daily-intro-card h2{ font-size:clamp(1.9rem, 5vw, 2.7rem); font-style:italic; }
+  .daily-intro-card p{ max-width:470px; margin:18px auto 30px; color:var(--text-dim); line-height:1.75; }
+  .daily-intro-card .continue-btn{ margin:0 auto; }
+
+  /* ---------- final daily-note book ---------- */
+  .book-shell{ width:100%; max-width:760px; margin:0 auto; }
+  #daily-page .daily-note{
+    min-height:420px; margin:0; padding:54px 60px; text-align:left;
+    background:linear-gradient(105deg, rgba(6,13,22,.98), rgba(15,31,48,.98) 10%, rgba(20,42,64,.98));
+    border-radius:8px 22px 22px 8px; position:relative;
+  }
+  #daily-page .daily-note::before{
+    content:''; position:absolute; inset:0 auto 0 32px; width:1px;
+    background:rgba(102,179,255,.2); box-shadow:8px 0 18px rgba(0,0,0,.16);
+  }
+  #daily-page .daily-note::after{
+    content:'\2726'; position:absolute; right:28px; top:20px; color:var(--accent-light); font-size:1.5rem; opacity:.75;
+  }
+  .book-controls{ display:grid; grid-template-columns:108px minmax(150px,1fr) 108px; align-items:center; gap:16px; margin-top:24px; }
+  .book-nav{
+    min-width:108px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 15px;
+    border:1px solid var(--line); border-radius:999px; background:rgba(15,31,48,.8); color:var(--text-soft);
+    cursor:pointer; font-size:.86rem; transition:transform .2s ease, border-color .2s ease, opacity .2s ease;
+  }
+  .book-nav:hover:not(:disabled){ transform:translateY(-2px); border-color:var(--accent-light); }
+  .book-nav:focus-visible{ outline:2px solid var(--accent-light); outline-offset:3px; }
+  .book-nav:disabled{ cursor:not-allowed; opacity:.35; }
+  .book-nav svg{ width:16px; height:16px; }
+  .book-progress{ min-width:0; color:var(--text-dim); font-size:.78rem; letter-spacing:.08em; text-align:center; text-transform:uppercase; white-space:nowrap; }
+  .book-progress strong{ display:block; color:var(--accent-light); font-family:'Caveat', cursive; font-size:1.25rem; font-weight:500; letter-spacing:0; line-height:1.1; text-transform:none; }
+  .page-jump{ grid-column:1 / -1; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--text-dim); font-size:.78rem; }
+  .page-jump input{
+    width:58px; padding:7px 6px; border:1px solid var(--line); border-radius:8px; background:rgba(15,31,48,.9);
+    color:var(--text-soft); font:inherit; text-align:center;
+  }
+  .page-jump input:focus-visible{ outline:2px solid var(--accent-light); outline-offset:2px; }
+  .page-jump button{
+    padding:7px 12px; border:1px solid var(--line); border-radius:8px; background:rgba(0,127,255,.18);
+    color:var(--text-soft); cursor:pointer; font:inherit;
+  }
+  .page-jump button:hover{ border-color:var(--accent-light); }
+  @media (max-width:600px){
+    #daily-page .daily-note{ min-height:390px; padding:44px; }
+    #daily-page .daily-note::before{ left:22px; }
+    #daily-page .daily-note::after{ right:17px; top:12px; }
+    .book-controls{ grid-template-columns:86px minmax(0,1fr) 86px; gap:10px; }
+    .book-nav{ min-width:0; padding:10px 8px; font-size:.79rem; }
+    .book-progress{ font-size:.68rem; }
+    .page-jump{ font-size:.73rem; }
+  }
+
+  .tiles{
+    display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:18px;
+    width:100%; max-width:760px;
+  }
+  .tiles .tile:last-child{ grid-column:2; }
+  @media (max-width:680px){ .tiles{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width:680px){
+    .tiles .tile:last-child{ grid-column:1 / -1; width:calc((100% - 18px) / 2); justify-self:center; }
+  }
+
+  .tile{
+    background: linear-gradient(160deg, var(--bg-panel), var(--bg-panel-soft));
+    border:1px solid var(--line); border-radius:18px; padding:26px 16px;
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:10px;
+    box-shadow: var(--shadow); transition: transform .25s ease, border-color .25s ease;
+    color: inherit;
+  }
+  .tile:hover{ transform: translateY(-4px); border-color: rgba(0,127,255,.5); }
+  .tile:focus-visible{ outline:2px solid var(--accent-light); outline-offset:3px; }
+  .tile .icon{
+    width:44px; height:44px; border-radius:50%;
+    background: linear-gradient(135deg, var(--accent), var(--gray));
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tile .icon svg{ width:20px; height:20px; stroke: #ffffff; fill:none; }
+  .tile .label{ font-size:.95rem; font-weight:500; }
+  .tile .sub{ font-size:.76rem; color: var(--text-dim); }
+
+  .hub-foot{ margin-top:56px; color: var(--text-dim); text-align:center; }
+  .hub-foot .counter{ font-family:'Playfair Display', serif; font-style:italic; font-size:1.3rem; color: var(--text-soft); margin-bottom:6px; }
+  .hub-foot .sig{ font-family:'Caveat', cursive; font-size:1.15rem; margin-top:14px; color: var(--accent-light); }
+
+  /* ---------- story ---------- */
+  #story-page .cards{ display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+  @media (max-width:720px){ #story-page .cards{ grid-template-columns:1fr; } }
+  .card{
+    background: linear-gradient(160deg, var(--bg-panel), var(--bg-panel-soft));
+    border:1px solid var(--line); border-radius:18px; padding:32px 30px;
+    box-shadow: var(--shadow);
+  }
+  .card h3{ font-size:1.2rem; margin-bottom:14px; color: var(--accent-light); font-style:italic; }
+  .card p{ color: var(--text-dim); line-height:1.75; font-size:.98rem; white-space:pre-line; }
+
+  /* ---------- reasons (click-to-reveal) ---------- */
+  #reasons-page .kicker{ max-width:760px; margin:0 auto 6px; }
+  #reasons-page .heading{ max-width:760px; margin:0 auto 44px; }
+  .reasons-list{ display:flex; flex-direction:column; gap:16px; max-width:760px; margin:0 auto; }
+  .reason-item{
+    display:flex; gap:18px; align-items:flex-start; width:100%; text-align:left;
+    background: linear-gradient(160deg, var(--bg-panel), var(--bg-panel-soft));
+    border:1px solid var(--line); border-radius:16px; padding:22px 26px;
+    box-shadow: var(--shadow); cursor:pointer; color:inherit; font-family:inherit;
+    transition: border-color .25s ease, transform .2s ease, background .3s ease;
+  }
+  .reason-item:hover{ border-color: rgba(0,127,255,.45); transform: translateY(-2px); }
+  .reason-item:focus-visible{ outline:2px solid var(--accent-light); outline-offset:3px; }
+  .reason-item .reason-num{
+    flex:0 0 auto; width:34px; height:34px; border-radius:50%;
+    display:grid; place-items:center; font-family:'Caveat', cursive; font-size:1.15rem;
+    color:#fff; background: linear-gradient(135deg, var(--accent-deep), var(--accent));
+    transition: background .3s ease;
+  }
+  .reason-item .reason-body{ min-width:0; flex:1; }
+  .reason-item .reason-prompt{
+    margin:0; color: var(--text-dim); font-family:'Caveat', cursive; font-size:1.15rem;
+    display:flex; align-items:center; gap:8px;
+  }
+  .reason-item .reason-prompt svg{ width:15px; height:15px; opacity:.7; flex:0 0 auto; }
+  .reason-item p.reason-text{
+    margin:0; color: var(--text-soft); line-height:1.7; font-size:1rem; white-space:pre-line;
+    display:none;
+  }
+  .reason-item.revealed{ cursor:default; background: linear-gradient(160deg, rgba(0,127,255,.1), var(--bg-panel-soft)); }
+  .reason-item.revealed .reason-prompt{ display:none; }
+  .reason-item.revealed p.reason-text{
+    display:block; animation: reasonIn .4s ease both;
+  }
+  @keyframes reasonIn{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .reason-item.revealed p.reason-text{ animation:none; } }
+  @media (max-width:600px){ .reason-item{ padding:18px 20px; gap:14px; } }
+
+  /* ---------- music: persistent Spotify-style player ---------- */
+  .music-note{
+    width:100%; max-width:620px; margin:0 auto; padding:30px; border:1px solid var(--line); border-radius:18px;
+    background:linear-gradient(160deg, var(--bg-panel), var(--bg-panel-soft)); box-shadow:var(--shadow);
+    color:var(--text-dim); line-height:1.7; display:flex; flex-direction:column; align-items:flex-start; gap:18px;
+  }
+  .music-note p{ margin:0; }
+  #music-page .kicker{ max-width:620px; margin:0 auto 6px; }
+  #music-page .heading{ max-width:620px; margin:0 auto 44px; }
+  .floating-player{
+    position:fixed; right:22px; bottom:22px; z-index:60; width:min(390px, calc(100vw - 28px));
+    border:1px solid var(--line); border-radius:18px; background:rgba(15,31,48,.94);
+    backdrop-filter:blur(16px); box-shadow:var(--shadow); overflow:hidden;
+    transform:translateY(0); transition:transform .3s ease, opacity .3s ease;
+  }
+  .floating-player.hidden{ transform:translateY(calc(100% + 32px)); opacity:0; pointer-events:none; }
+  .player-main{ padding:15px; }
+  .player-top{ display:flex; gap:12px; align-items:center; }
+  .mini-vinyl{
+    width:48px; height:48px; flex:0 0 48px; border-radius:50%; border:1px solid var(--line);
+    background:radial-gradient(circle at center, var(--accent-light) 0 5px, #07111d 6px 10px, transparent 11px), repeating-radial-gradient(circle at center,#18324b 0 2px,#0a1520 2px 4px);
+    animation:spin 5s linear infinite; animation-play-state:paused;
+  }
+  .mini-vinyl.playing{ animation-play-state:running; }
+  .track-info{ min-width:0; flex:1; }
+  .track-info .t{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; font-size:.93rem; }
+  .track-info .a{ color:var(--text-dim); font-size:.78rem; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .icon-btn, .transport button{
+    background:none; border:0; color:var(--text-soft); cursor:pointer; display:grid; place-items:center;
+    width:34px; height:34px; border-radius:50%; transition:.2s;
+  }
+  .icon-btn:hover, .transport button:hover{ background:rgba(255,255,255,.1); }
+  .icon-btn svg, .transport svg{ width:18px; height:18px; }
+  .player-controls{ display:flex; align-items:center; justify-content:center; gap:10px; margin-top:12px; }
+  .vinyl{
+    width:170px; height:170px; border-radius:50%;
+    background:
+      radial-gradient(circle at center, var(--bg-deep) 0 12px, #050c14 12px 14px, transparent 14px),
+      repeating-radial-gradient(circle at center, #142a40 0 3px, #0e1d2c 3px 6px);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    animation: spin 6s linear infinite; animation-play-state: paused;
+    box-shadow: inset 0 0 30px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.4);
+  }
+  .vinyl::after{
+    content:''; width:22px; height:22px; border-radius:50%;
+    background: linear-gradient(135deg, var(--accent-deep), var(--gray-light));
+  }
+  .vinyl.playing{ animation-play-state: running; }
+  @keyframes spin{ to{ transform: rotate(360deg);} }
+
+  .transport{ display:flex; align-items:center; gap:8px; }
+  .transport button.play{ width:42px; height:42px; background:var(--accent); }
+  .progress-row{ display:flex; align-items:center; gap:8px; margin-top:12px; }
+  .time{ color:var(--text-dim); font-size:.68rem; font-variant-numeric:tabular-nums; min-width:30px; }
+  .time:last-child{ text-align:right; }
+  .progress{ flex:1; height:4px; background:rgba(255,255,255,.14); border-radius:99px; cursor:pointer; overflow:hidden; }
+  .progress .bar{ height:100%; width:0%; background:linear-gradient(90deg,var(--gray-light),var(--accent)); }
+  .volume-row{ display:flex; align-items:center; gap:8px; margin-top:12px; color:var(--text-dim); }
+  .volume-row svg{ width:16px; height:16px; flex:0 0 auto; }
+  .volume-row input{ flex:1; accent-color:var(--accent); cursor:pointer; }
+  .volume-row output{ width:32px; text-align:right; font-size:.7rem; font-variant-numeric:tabular-nums; }
+  .playlist-panel{ display:none; padding:0 10px 10px; border-top:1px solid var(--line); }
+  .playlist-panel.open{ display:block; }
+  .playlist-label{ color:var(--text-dim); font-size:.73rem; padding:10px 4px 5px; }
+  .queue{ display:flex; flex-direction:column; gap:4px; max-height:220px; overflow:auto; padding-right:3px; }
+  .queue::-webkit-scrollbar{ width:5px; }
+  .queue::-webkit-scrollbar-thumb{ background: var(--gray-light); border-radius:4px; opacity:.4; }
+  .qrow{
+    display:flex; align-items:center; gap:14px; padding:11px 14px; border-radius:12px;
+    cursor:pointer; transition:.2s; border:1px solid transparent;
+  }
+  .qrow:hover{ background: rgba(255,255,255,.04); }
+  .qrow.active{ background: rgba(0,127,255,.14); border-color: rgba(0,127,255,.4); }
+  .qrow .num{ width:20px; font-size:.8rem; color: var(--text-dim); }
+  .qrow.active .num{ color: var(--accent-light); }
+  .qrow .bars{ display:flex; gap:2px; width:14px; height:14px; align-items:flex-end; }
+  .qrow .bars span{ width:2.5px; background: var(--accent-light); border-radius:2px; height:3px; }
+  .qrow.active .bars span{ animation: eq 1s ease-in-out infinite; }
+  .qrow.active .bars span:nth-child(2){ animation-delay:.15s; }
+  .qrow.active .bars span:nth-child(3){ animation-delay:.3s; }
+  @keyframes eq{ 0%,100%{ height:3px;} 50%{ height:13px;} }
+  .qrow .meta{ flex:1; min-width:0; }
+  .qrow .meta .t{ font-size:.92rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .qrow .meta .a{ font-size:.78rem; color: var(--text-dim); }
+  .qrow .dur{ font-size:.78rem; color: var(--text-dim); }
+
+  .player-reveal{
+    position:fixed; right:22px; bottom:22px; z-index:60; display:none; align-items:center; gap:9px;
+    padding:11px 15px; color:var(--text-soft); background:var(--accent); border:0; border-radius:999px;
+    box-shadow:0 12px 30px rgba(0,0,0,.35); cursor:pointer; font:500 .85rem 'Outfit',sans-serif;
+  }
+  .player-reveal.show{ display:flex; }
+  .player-reveal svg{ width:17px; height:17px; }
+  @media (max-width:600px){ .floating-player{ right:14px; bottom:14px; } .player-reveal{right:14px;bottom:14px;} }
+
+  /* ---------- playlist switcher (Our Songs / Top 100) ---------- */
+  .playlist-switch{
+    display:flex; gap:6px; padding:12px 10px 0;
+  }
+  .switch-btn{
+    flex:1; padding:9px 10px; border-radius:10px; border:1px solid var(--line); background:transparent;
+    color:var(--text-dim); font:500 .78rem 'Outfit',sans-serif; cursor:pointer; transition:.2s;
+  }
+  .switch-btn:hover{ background:rgba(255,255,255,.06); color:var(--text-soft); }
+  .switch-btn.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  /* playlist switcher, standalone-on-page variant (Music page) */
+  .playlist-switch.page-switch{
+    max-width:420px; margin:0 auto 10px; padding:0; gap:10px;
+  }
+  .playlist-switch.page-switch .switch-btn{
+    padding:13px 14px; border-radius:12px; font-size:.85rem;
+  }
+  .page-queue-label{
+    max-width:420px; margin:0 auto 28px; text-align:center; color:var(--text-dim);
+    font-size:.82rem; letter-spacing:.02em;
+  }
+
+  /* transport controls read as inactive until a playlist is actually chosen —
+     still clickable, so a tap opens the choice popup instead of doing nothing */
+  .controls-locked{ opacity:.4; }
+  .qrow.queue-empty{ justify-content:center; padding:16px 10px; color:var(--text-dim); font-size:.82rem; cursor:default; }
+  .qrow.queue-empty .t{ color:var(--text-dim); }
+
+  /* ---------- playlist choice — a real blocking popup, can't be dismissed without choosing ---------- */
+  .choice-overlay{
+    position:fixed; inset:0; z-index:300; display:none; align-items:center; justify-content:center;
+    padding:20px; background:rgba(4,9,15,.86); backdrop-filter:blur(8px);
+  }
+  .choice-overlay.open{ display:flex; }
+  .choice-card{
+    width:min(420px, 100%); border:1px solid var(--line); border-radius:20px;
+    background:linear-gradient(160deg, var(--bg-panel), var(--bg-panel-soft)); box-shadow:var(--shadow);
+    padding:32px 26px; text-align:center;
+    animation: choicePop .3s ease;
+  }
+  @keyframes choicePop{ from{ opacity:0; transform:translateY(10px) scale(.98); } to{ opacity:1; transform:none; } }
+  .choice-kicker{ display:block; color:var(--accent-light); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; }
+  .choice-title{ font-family:'Playfair Display',serif; font-size:1.35rem; color:var(--text-soft); margin:0 0 8px; }
+  .choice-sub{ color:var(--text-dim); font-size:.85rem; line-height:1.6; margin:0 0 22px; }
+  .choice-options{ display:flex; flex-direction:column; gap:12px; }
+  .choice-option{
+    display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:14px 16px; border-radius:14px;
+    border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--text-soft); cursor:pointer;
+    text-align:left; transition:.2s; font-family:'Outfit',sans-serif; width:100%;
+  }
+  .choice-option:hover{ border-color:var(--accent); background:rgba(0,127,255,.1); }
+  .choice-option .co-title{ font-weight:600; font-size:.98rem; }
+  .choice-option .co-sub{ color:var(--text-dim); font-size:.78rem; }
+
+  /* ---------- letter ---------- */
+  #page-letter .wrap{
+    min-height:100svh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:var(--page-space) var(--page-gutter);
+  }
+  .envelope-stage{ perspective:1400px; width:min(480px, 90vw); margin:0 auto; padding:18px 0 30px; }
+  .envelope{ position:relative; width:100%; height:300px; user-select:none; }
+  .env-back{
+    position:absolute; inset:0; border-radius:10px;
+    background: linear-gradient(155deg, #142a40, #0f1f30);
+    border:1px solid var(--line); box-shadow: var(--shadow);
+    z-index:1;
+  }
+  .env-flap{
+    position:absolute; top:0; left:0; right:0; height:150px;
+    background: linear-gradient(160deg, #1a3550, #142a40);
+    clip-path: polygon(0 0, 100% 0, 50% 78%);
+    transform-origin: top center; transition: transform .8s cubic-bezier(.6,.1,.2,1);
+    border-top-left-radius:10px; border-top-right-radius:10px;
+    z-index:3; border-bottom: 1px solid var(--line);
+    backface-visibility: hidden; cursor:pointer;
+  }
+  .envelope.open .env-flap{ transform: rotateX(178deg); }
+  .seal{
+    position:absolute; top:60%; left:50%; transform:translate(-50%,-50%);
+    width:46px; height:46px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, var(--accent-light), var(--accent-deep));
+    display:flex; align-items:center; justify-content:center; z-index:4;
+    box-shadow: 0 6px 14px rgba(0,127,255,.4);
+    transition: opacity .4s ease, transform .4s ease; cursor:pointer;
+  }
+  .seal svg{ width:20px; height:20px; fill:#fff8; }
+  .envelope.open .seal{ opacity:0; transform:translate(-50%,-50%) scale(.4); pointer-events:none; }
+  .env-back{ cursor:pointer; }
+  .letter-paper{
+    position:absolute; left:6%; right:6%; bottom:8px; top:26px;
+    background: #f4f7fa; color:#1b3550; border-radius:6px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    padding:42px 24px 26px; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    transform: translateY(16%); opacity:0; pointer-events:none;
+    transition: transform .8s cubic-bezier(.2,.8,.2,1), opacity .2s ease;
+    z-index:2; cursor:default;
+  }
+  .envelope.open .letter-paper{
+    transform:translateY(-13%); opacity:1; pointer-events:auto; z-index:5;
+    transition:transform .8s cubic-bezier(.2,.8,.2,1) .1s, opacity .2s ease .16s;
+  }
+  #page-letter .envelope-stage{ transition:padding .55s ease; }
+  #page-letter:has(.envelope.open) .envelope-stage{ padding:150px 0 220px; }
+  .envelope.open .letter-paper{
+    left:-10%; right:-10%; top:50%; bottom:auto; height:min(560px, 75svh);
+    transform:translateY(-50%); padding:46px 38px 34px;
+    transition:transform .8s cubic-bezier(.2,.8,.2,1) .1s, opacity .2s ease .16s, height .6s ease, left .6s ease, right .6s ease;
+  }
+  .letter-close{
+    position:absolute; top:10px; right:10px; width:28px; height:28px; border:0; border-radius:50%;
+    background:#dce7f1; color:#1b3550; cursor:pointer; font-size:1.1rem; line-height:1;
+  }
+  .letter-close:hover{ background:var(--accent-light); color:#fff; }
+  .letter-paper p{
+    font-family:'Caveat', cursive; font-size:1.35rem; line-height:1.55; margin:0 0 14px;
+    white-space:pre-line;
+  }
+  .letter-paper:focus-visible{ outline:3px solid var(--accent-light); outline-offset:3px; }
+  .hint{ text-align:center; margin-top:18px; color: var(--text-dim); font-size:.85rem; }
+  @media (max-width:600px){
+    #page-letter .wrap{ padding:var(--page-space) var(--page-gutter); }
+    .envelope-stage{ padding-top:12px; }
+    #page-letter:has(.envelope.open) .envelope-stage{ padding:115px 0 175px; }
+    .envelope.open .letter-paper{ left:-4%; right:-4%; height:min(500px, 70svh); padding:42px 27px 28px; }
+  }
+
+  /* ---------- scratch reveal pages ---------- */
+  .reveal-block{ text-align:center; }
+  .reveal-frame{
+    position:relative; width:min(420px, 92vw); aspect-ratio: 4/5; margin:0 auto;
+    border-radius:20px; overflow:hidden; box-shadow: var(--shadow); border:1px solid var(--line);
+    touch-action:none;
+  }
+  .reveal-under{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(160deg,#142a40,#0a1520);
+  }
+  .reveal-under .placeholder{ text-align:center; color: var(--text-dim); padding:20px; }
+  .reveal-under .placeholder svg{ width:46px; height:46px; margin-bottom:10px; opacity:.6; }
+  .reveal-under img{ width:100%; height:100%; object-fit:cover; }
+  .reveal-canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:pointer; }
+  .reveal-caption{ margin-top:16px; color: var(--text-dim); font-size:.88rem; }
+  .reveal-caption .script{ display:block; font-size:1.3rem; color: var(--accent-light); margin-top:4px; }
+
+  /* ---------- draggable stacked-photo carousel ---------- */
+  .photo-carousel{
+    --drag-offset:0px; position:relative; width:min(560px, 96vw); height:420px; margin:0 auto;
+    touch-action:none; user-select:none; cursor:grab;
+  }
+  .photo-carousel.dragging{ cursor:grabbing; }
+  .photo-carousel:focus-visible{ outline:2px solid var(--accent-light); outline-offset:8px; border-radius:18px; }
+  .photo-drag, .photo-orbit{ position:absolute; inset:0; }
+  .photo-drag{ transform:translateX(var(--drag-offset)); transition:transform .25s ease-out; }
+  .photo-carousel.dragging .photo-drag{ transition:none; }
+  .photo-card{
+    position:absolute; top:50%; left:50%; width:250px; aspect-ratio:3/4;
+    margin:0; overflow:hidden; border:1px solid rgba(102,179,255,.42); border-radius:15px;
+    background:linear-gradient(160deg, #1a3550, #0a1520); box-shadow:0 18px 40px rgba(0,0,0,.42);
+    opacity:0; pointer-events:none; will-change:transform, opacity;
+    transition:transform .65s cubic-bezier(.2,.8,.2,1), opacity .4s ease;
+  }
+  .photo-card.is-front{ z-index:4; opacity:1; transform:translate(-50%,-50%) rotate(-1deg); }
+  .photo-card.is-right{ z-index:3; opacity:1; transform:translate(-8%,-48%) rotate(7deg) scale(.91); }
+  .photo-card.is-left{ z-index:2; opacity:1; transform:translate(-92%,-48%) rotate(-7deg) scale(.91); }
+  .photo-card.is-back{ z-index:1; opacity:1; transform:translate(-50%,-67%) rotate(1deg) scale(.8); }
+  .photo-card img{ display:block; width:100%; height:100%; object-fit:cover; }
+  .photo-placeholder{ width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:var(--text-dim); }
+  .photo-placeholder strong{ color:var(--accent-light); font-family:'Caveat', cursive; font-size:1.55rem; font-weight:500; }
+  .photo-placeholder span{ font-size:.78rem; }
+  .photo-controls{ display:flex; align-items:center; justify-content:center; gap:12px; margin-top:14px; }
+  .photo-next{
+    display:inline-flex; align-items:center; gap:7px; padding:10px 15px; border:1px solid var(--line); border-radius:999px;
+    background:rgba(15,31,48,.86); color:var(--text-soft); cursor:pointer; font:inherit; font-size:.85rem;
+  }
+  .photo-next:hover{ border-color:var(--accent-light); background:rgba(0,127,255,.15); }
+  .photo-next:focus-visible{ outline:2px solid var(--accent-light); outline-offset:3px; }
+  .photo-next svg{ width:16px; height:16px; }
+  .photo-position{ color:var(--text-dim); font-size:.78rem; min-width:82px; text-align:left; }
+  @media (max-width:600px){
+    .photo-carousel{ height:330px; }
+    .photo-card{ width:185px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="ambient"></div>
+
+<!-- A gentle welcome screen; the existing site is revealed after the correct code. -->
+<section id="welcome-lock" aria-label="Passcode entry">
+  <div class="lock-card">
+    <div class="lock-crest" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4.5" y="10.5" width="15" height="10" rx="2"></rect>
+        <path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"></path>
+      </svg>
+    </div>
+    <span class="lock-kicker">a little something for you</span>
+    <h2>One more secret</h2>
+    <p id="lockStatus">Enter the four-number passcode to open your corner of the internet.</p>
+    <div class="lock-dots" id="lockDots" aria-label="Four passcode digits entered">
+      <span class="lock-dot"></span><span class="lock-dot"></span><span class="lock-dot"></span><span class="lock-dot"></span>
+    </div>
+    <div class="lock-keypad" id="lockKeypad" aria-label="Passcode keypad">
+      <button class="lock-key" type="button" data-key="1">1</button>
+      <button class="lock-key" type="button" data-key="2">2</button>
+      <button class="lock-key" type="button" data-key="3">3</button>
+      <button class="lock-key" type="button" data-key="4">4</button>
+      <button class="lock-key" type="button" data-key="5">5</button>
+      <button class="lock-key" type="button" data-key="6">6</button>
+      <button class="lock-key" type="button" data-key="7">7</button>
+      <button class="lock-key" type="button" data-key="8">8</button>
+      <button class="lock-key" type="button" data-key="9">9</button>
+      <span class="lock-key blank" aria-hidden="true"></span>
+      <button class="lock-key" type="button" data-key="0">0</button>
+      <button class="lock-key delete" type="button" data-key="delete" aria-label="Delete last digit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9l-6-8 6-8z"></path><path d="m10 9 4 6m0-6-4 6"></path></svg>
+      </button>
+    </div>
+    <div class="lock-hint">press the stars in the right order ✦</div>
+  </div>
+</section>
+
+<!-- This player stays with you on every page. -->
+<aside class="floating-player" id="floatingPlayer" aria-label="Music player">
+  <div class="player-main">
+    <div class="player-top">
+      <div class="mini-vinyl" id="miniVinyl" aria-hidden="true"></div>
+      <div class="track-info"><div class="t" id="npTitle">—</div><div class="a" id="npArtist">—</div></div>
+      <button class="icon-btn" id="playlistBtn" aria-label="Show playlist" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/><path d="M18 16v5M15.5 18.5h5"/></svg></button>
+      <button class="icon-btn" id="hidePlayerBtn" aria-label="Hide player"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
+    <div class="player-controls transport">
+      <button id="prevBtn" aria-label="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6L9 12l11 6z"/></svg></button>
+      <button id="playBtn" class="play" aria-label="Play"><svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"></svg></button>
+      <button id="nextBtn" aria-label="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l11 6-11 6z"/></svg></button>
+    </div>
+    <div class="progress-row"><span class="time" id="currentTime">0:00</span><div class="progress" id="progressTrack" role="slider" aria-label="Song progress"><div class="bar" id="progBar"></div></div><span class="time" id="durationTime">0:00</span></div>
+    <label class="volume-row" for="volumeControl">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg>
+      <input id="volumeControl" type="range" min="0" max="1" step="0.01" value="0.65" aria-label="Volume">
+      <output id="volumeValue" for="volumeControl">65%</output>
+    </label>
+  </div>
+  <div class="playlist-panel" id="playlistPanel">
+    <div class="playlist-switch" id="playlistSwitch">
+      <button type="button" class="switch-btn" data-playlist="ours">Our Songs</button>
+      <button type="button" class="switch-btn" data-playlist="top100">Top 100</button>
+    </div>
+    <div class="playlist-label" id="queueLabel">your songs — choose one to play</div>
+    <div class="queue" id="queue"></div>
+  </div>
+</aside>
+<button class="player-reveal" id="showPlayerBtn" aria-label="Show music player"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Now playing</button>
+
+<!-- ============ PLAYLIST CHOICE — a real blocking popup, must choose to continue ============ -->
+<div class="choice-overlay" id="choiceOverlay" role="dialog" aria-modal="true" aria-labelledby="choiceTitle">
+  <div class="choice-card">
+    <span class="choice-kicker" id="choiceKicker">before we begin</span>
+    <h3 class="choice-title" id="choiceTitle">what should play?</h3>
+    <p class="choice-sub" id="choiceSub">pick a playlist to continue — you can always switch it later from the player.</p>
+    <div class="choice-options">
+      <button class="choice-option" type="button" data-choose="ours">
+        <span class="co-title" id="choiceOptOursTitle">Our Songs</span>
+        <span class="co-sub" id="choiceOptOursSub">the ones that remind me of you</span>
+      </button>
+      <button class="choice-option" type="button" data-choose="top100">
+        <span class="co-title" id="choiceOptTop100Title">Top 100</span>
+        <span class="co-sub" id="choiceOptTop100Sub">a countdown of the best songs, ranked</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<button class="backBtn" data-back style="display:none;">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+  back
+</button>
+
+<!-- ============ HUB ============ -->
+<section class="page active" id="page-hub" data-page="hub">
+  <div class="hub-inner">
+    <span class="eyebrow">a small corner of the internet, just for</span>
+    <h1 id="heroName">Gladibelle</h1>
+    <p class="tagline script" id="heroTagline">every good thing I know, I learned by loving you.</p>
+
+    <div class="tiles">
+      <button class="tile" data-goto="story">
+        <span class="icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5C20 4.7 19.3 4 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg></span>
+        <span class="label">Our story</span>
+        <span class="sub">why this exists</span>
+      </button>
+      <button class="tile" data-goto="music">
+        <span class="icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
+        <span class="label">Our songs</span>
+        <span class="sub">on repeat</span>
+      </button>
+      <button class="tile" data-goto="letter">
+        <span class="icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+        <span class="label">A letter</span>
+        <span class="sub">for you</span>
+      </button>
+      <button class="tile" data-goto="us">
+        <span class="icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2.5h5L16 6"/></svg></span>
+        <span class="label">A photo of us</span>
+        <span class="sub">four little moments</span>
+      </button>
+      <button class="tile" data-goto="bouquet">
+        <span class="icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="7" r="2.6"/><circle cx="7" cy="10" r="2.6"/><circle cx="17" cy="10" r="2.6"/><path d="M12 12v9"/></svg></span>
+        <span class="label">Your bouquet</span>
+        <span class="sub">picked just for you</span>
+      </button>
+      <button class="tile" data-goto="daily">
+        <span class="icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 21s-7-4.6-9.5-8.8C.7 8.6 2 5 5.4 5 7.6 5 9.5 6.3 12 9c2.5-2.7 4.4-4 6.6-4C22 5 23.3 8.6 21.5 12.2 19 16.4 12 21 12 21z"/></svg></span>
+        <span class="label">One last thing</span>
+        <span class="sub">a note for today</span>
+      </button>
+      <button class="tile" id="reasonsTile" data-goto="reasons">
+        <span class="icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 4.5c2-2.5 6-2.5 7.5.5 1.5 3-1 6.5-7.5 12-6.5-5.5-9-9-7.5-12 1.5-3 5.5-3 7.5-.5z"/></svg></span>
+        <span class="label">Reasons I love you</span>
+        <span class="sub">a running list</span>
+      </button>
+    </div>
+
+    <div class="hub-foot">
+      <div class="counter" id="dayCounter"></div>
+      <div>and every day from here still counts.</div>
+      <div class="sig" id="signature"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STORY ============ -->
+<section class="page" id="page-story" data-page="story">
+  <div class="wrap" id="story-page">
+    <span class="kicker">the backstory</span>
+    <h2 class="heading">why this exists</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>why I made this</h3>
+        <p id="whyText"></p>
+      </div>
+      <div class="card">
+        <h3>who made this</h3>
+        <p id="whoText"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REASONS ============ -->
+<section class="page" id="page-reasons" data-page="reasons">
+  <div class="wrap" id="reasons-page">
+    <span class="kicker">a running list</span>
+    <h2 class="heading">reasons I love you</h2>
+    <div class="reasons-list" id="reasonsList"></div>
+  </div>
+</section>
+
+<!-- ============ MUSIC ============ -->
+<section class="page" id="page-music" data-page="music">
+  <div class="wrap" id="music-page">
+    <span class="kicker">on repeat</span>
+    <h2 class="heading">songs that remind me of you</h2>
+    <div class="playlist-switch page-switch" id="playlistSwitchPage">
+      <button type="button" class="switch-btn" data-playlist="ours">Our Songs</button>
+      <button type="button" class="switch-btn" data-playlist="top100">Top 100</button>
+    </div>
+    <div class="page-queue-label" id="queueLabelPage">your songs — choose one to play</div>
+    <div class="music-note">
+      <p>Your player is always down in the corner, so the music can follow you while you explore. Open its playlist button to pick a different song, or hide it and bring it back whenever you want.</p>
+      <button class="tile" id="openPlaylistBtn" style="display:inline-flex;padding:11px 16px;flex-direction:row;">open the player</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LETTER ============ -->
+<section class="page" id="page-letter" data-page="letter">
+  <div class="wrap">
+    <span class="kicker" style="display:block;text-align:center;">for you</span>
+    <h2 class="heading" style="text-align:center;">a message I'll always mean</h2>
+    <div class="envelope-stage">
+      <div class="envelope" id="envelope">
+        <div class="letter-paper" id="letterPaper" tabindex="0" aria-label="Letter content. Scroll to read more."><button class="letter-close" id="letterClose" type="button" aria-label="Close letter">×</button></div>
+        <div class="env-flap" id="envFlap"></div>
+        <div class="env-back" id="envBack"></div>
+        <div class="seal" id="envSeal">
+          <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9.5-8.8C.7 8.6 2 5 5.4 5 7.6 5 9.5 6.3 12 9c2.5-2.7 4.4-4 6.6-4C22 5 23.3 8.6 21.5 12.2 19 16.4 12 21 12 21z"/></svg>
+        </div>
+      </div>
+      <p class="hint" id="envHint">tap the envelope to open it</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ US (photo) ============ -->
+<section class="page" id="page-us" data-page="us">
+  <div class="wrap reveal-block">
+    <span class="kicker">us</span>
+    <h2 class="heading">four little moments of us</h2>
+    <div class="photo-carousel" id="photoCarousel" tabindex="0" aria-label="Four photos of us. Drag to rotate the carousel, or use the left and right arrow keys.">
+      <div class="photo-drag" id="photoDrag">
+        <div class="photo-orbit" id="photoOrbit"></div>
+      </div>
+    </div>
+    <div class="photo-controls">
+      <button class="photo-next" id="nextPhotoBtn" type="button">Next photo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+      <span class="photo-position" id="photoPosition" aria-live="polite"></span>
+    </div>
+    <div class="reveal-caption">it keeps turning on its own<span class="script">drag it whenever you want to look closer</span></div>
+  </div>
+</section>
+
+<!-- ============ BOUQUET ============ -->
+<section class="page" id="page-bouquet" data-page="bouquet">
+  <div class="wrap reveal-block">
+    <span class="kicker">a little something</span>
+    <h2 class="heading">your bouquet</h2>
+    <div class="reveal-frame" id="bouquetFrame">
+      <div class="reveal-under" id="bouquetUnder"></div>
+      <canvas class="reveal-canvas" id="bouquetCanvas"></canvas>
+    </div>
+    <div class="reveal-caption">tap or swipe to unwrap it<span class="script">picked just for you</span></div>
+  </div>
+</section>
+
+<!-- ============ DAILY NOTE REMINDER ============ -->
+<section class="page" id="page-daily-intro" data-page="daily-intro">
+  <div class="wrap" id="daily-intro-page">
+    <div class="daily-intro-card">
+      <span class="intro-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5C20 4.7 19.3 4 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg></span>
+      <span class="kicker" id="dailyIntroKicker">before you continue</span>
+      <h2 id="dailyIntroTitle">one last thing</h2>
+      <p id="dailyIntroMessage">You’re about to open a collection of daily notes—one small piece of my heart for every day in between. Take your time with them.</p>
+      <button class="tile continue-btn" id="dailyIntroContinue" type="button" style="display:inline-flex;padding:11px 18px;flex-direction:row;">show me the notes</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DAILY NOTE BOOK (the final page) ============ -->
+<section class="page" id="page-daily" data-page="daily">
+  <div class="wrap" id="daily-page">
+    <div class="book-shell" aria-label="A book of daily notes">
+      <article class="daily-note" aria-labelledby="dailyNoteHeading" aria-live="polite">
+        <span class="note-kicker" id="dailyNoteHeading">one last thing</span>
+        <span class="note-date" id="dailyNoteDate"></span><span class="note-count" id="dailyNoteCount"></span>
+        <p class="note-message" id="dailyNoteMessage"></p>
+      </article>
+      <nav class="book-controls" aria-label="Daily note pages">
+        <button class="book-nav" id="dailyPrevBtn" type="button" aria-label="Previous note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          Back
+        </button>
+        <div class="book-progress" aria-live="polite"><strong id="dailyPageNumber">Day 1</strong><span id="dailyPageTotal"></span></div>
+        <button class="book-nav" id="dailyNextBtn" type="button" aria-label="Next note">
+          Next
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <form class="page-jump" id="dailyJumpForm">
+          <label for="dailyPageJump">Jump to page</label>
+          <input id="dailyPageJump" type="number" min="1" step="1" inputmode="numeric" aria-label="Page number">
+          <button type="submit">Go</button>
+        </form>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ============================================================
+   WELCOME LOCK — passcode is intentionally kept close to its UI
+   ============================================================ */
+(function welcomeLock(){
+  const PASSCODE = '4444';
+  const lock = document.getElementById('welcome-lock');
+  const keypad = document.getElementById('lockKeypad');
+  const dots = [...document.querySelectorAll('#lockDots .lock-dot')];
+  const dotsWrap = document.getElementById('lockDots');
+  const status = document.getElementById('lockStatus');
+  let entry = '';
+  let unlocked = false;
+
+  function render(){
+    dots.forEach((dot, index) => dot.classList.toggle('filled', index < entry.length));
+  }
+
+  function resetAfterError(){
+    dotsWrap.classList.add('error');
+    status.textContent = 'That one is not it — try again.';
+    window.setTimeout(() => {
+      entry = '';
+      render();
+      dotsWrap.classList.remove('error');
+      status.textContent = 'Enter the four-number passcode to open your corner of the internet.';
+    }, 620);
+  }
+
+  function unlock(){
+    unlocked = true;
+    status.textContent = 'Welcome in.';
+    lock.classList.add('unlocking');
+    window.setTimeout(() => lock.remove(), 800);
+  }
+
+  function enter(key){
+    if(unlocked || dotsWrap.classList.contains('error')) return;
+    if(key === 'delete'){
+      entry = entry.slice(0, -1);
+      render();
+      return;
+    }
+    if(!/^\d$/.test(key) || entry.length === PASSCODE.length) return;
+    entry += key;
+    render();
+    if(entry.length === PASSCODE.length){
+      window.setTimeout(() => entry === PASSCODE ? unlock() : resetAfterError(), 170);
+    }
+  }
+
+  keypad.addEventListener('click', event => {
+    const button = event.target.closest('[data-key]');
+    if(button) enter(button.dataset.key);
+  });
+
+  window.addEventListener('keydown', event => {
+    if(unlocked) return;
+    if(event.key >= '0' && event.key <= '9') enter(event.key);
+    if(event.key === 'Backspace') enter('delete');
+  });
+})();
+
+/* ============================================================
+   CONFIG — edit everything here
+   ============================================================ */
+const CONFIG = {
+  herName: "Gladibelle",
+  tagline: "every good thing I know, I learned by loving you.",
+
+  // REASONS I LOVE YOU — add, remove, or replace these messages freely.
+  // Each line becomes a card that reveals its message when clicked.
+  reasons: [
+    "I just love how you laugh at every joke I tell you, even when it\'s \"CORNY\" as heck.",
+    "I love how you make me feel seen, whenever I feel like im a ghost, you\'re there for me.",
+    "I love how you\'re the only person to see my eyes sparkle, everytime you compliment my eyes, I feel very very touched.",
+    "I love the way you still make time for me even on your busiest days.",
+    "I love how silly and goofy you are when you\'re around me.",
+    "I love seeing you trip, even on flat sandals, It makes me see the way you blush of shyness.",
+    "I love seeing you laugh, It had became my escape to all of my problems.",
+    "I always love seeing you with \"pambahay\" clothes, it shows the way you dress up on non special days.",
+    "I love seeing you try to test my patience, like why though? It makes me happy, I don\'t know why.",
+    "I love how makulit you are when it comes to me, like what do you want me to do? When it comes to your brothers, you act like the big sister you are.",
+    "I love how you always say \"Im so haggard\" when I clearly don\'t care how you look.",
+    "I love how you\'re the only person to truly see what my intentions are to someone I truly want.",
+    "I love how you react everytime I try to buy you things, \"sabi mo last na yon\" I find it very funny and sweet.",
+    "I love how you try to include me in your friends hangouts, I got jealous of them, but I also understand that they also have their time.",
+    "I love seeing you react to things that you firstly experience with me, the flowers, the \"GF\" day, I somehow felt special.",
+    "I love seeing you play valo, I can see that you truly wanna be with me by playing the game I never left.",
+    "I love how you always wanna watch me play, it shows that you wanna support me in things I wanna do.",
+    "I love how supportive you are to your brothers, I see it as parenting vibe of support.",
+    "I ALWAYS LOVE HOW YOU STAND, it may seem weird but, seeing you stand with your feet close together brings me joy, I find you cute when you\'re like that.",
+    "I love it when you have chikas to tell me about, I don\'t care about the chika, well I do, but not the same as hearing your voice.",
+    "I love it when you always tell me about your day, so I know how can I make it a little bit better.",
+    "I love how you always wanna tambay with me even though nahihirapan kana with all the \"Kati\" dahil sa lamok.",
+    "I love hearing your voice, hearing you everytime makes me calm.",
+    "I love seeing seeing you smile, seeing you joyful will always be my goal.",
+    "I will always love seeing you, that\'ll be my definition of \"My day is made.\"",
+
+  ],
+
+  // PLAYLIST CHOICE POPUP — the text on the "what should play?" popup.
+  choiceKicker: "before we begin",
+  choiceTitle: "what should play?",
+  choiceSub: "pick a playlist to continue - you can always switch it later from the player.",
+  choiceOptions: {
+    ours: { title: "Songs I picked for you", sub: "Songs thats makes me feel deeply for you" },
+    top100: { title: "Your top 100", sub: "Your top 100 ranked songs" },
+  },
+
+  // DAILY NOTES — set the first and final dates, then write one message beside each day below.
+  // Keep \n inside a message to start a new line.
+  dailyIntro: {
+    kicker: "before you continue",
+    title: "one last thing",
+    message: "You\'re about to open what I felt on the 114 days without you, some are bad and some are good. If things feel bad for me this is where I run to.",
+    button: "show me the notes"
+  },
+  dailyStartDate: "2026-07-30",
+  dailyEndDate: "2026-11-20",
+  dailyMessages: [
+    "July 30, 2026 - My day was so bad, I cried twice. I was constantly thinking of how it could have went we I didn't say that. But kept saying to myself that \"atleast I was honest\" cause you really deserve to know everything. I tried to go somewhere where I could really distract myself to not think about what had happened, I couldn\'t. Stephen did everything to help me, all I did to him his cry in his arms, we had deep talks about life, how I wish you would be here in every achievement I wanna do, specially the ones where I repay everything to my family. I wanted you see me do it, I wanted for you to be the first person I could ever lean on when things get hard. I was sad when you said you we're going to move on from me, I didn't want that, cause what I truly want is for us to be together til the end.", // Day 1
+    "July 31, 2026 - Got a little better, but kept finding your presence. I tried to find something that isn't reachable, your presence was something I truly valued, but now that its gone, I still feel empty, while even trying to distract myself from thinking about it. Running away from it doesn't save me from it, even while im with my closest friends, hanging out, having fun and all, I still feel lonely, I kept finding something that isn\'t reachable, you. How I wish I could just chat you one more time, and tell you, \'Can I go to your house?\' those days will always be the best, me resting in your arms, something I would always call my Home.", // Day 2
+    "August 1, 2026 - Every single second of my day was me trying not to think about you, I kept distracting myself, so I could stop thinking, nothing worked. So I made that website, it atleast made your day, but I\'m feeling empty inside, the little interaction we did is what I wanna do everyday, for the rest of my life. All I wanna do is always ask about your day, how it went, I miss you, I really do. Here\'s me wishing you back, every single day.", // Day 3
+    "August 2, 2026 - Filled my day with distractions that didn\'t work, I see you went to a bar, I hope you had fun. Here I am again, broke down, crying, yearning for something I used to have, I can\'t tell what triggered inside me to feel something like this once again, but all I can think about is you, I miss you already. I wrote this cause this day, all I thought of is how I can ever get something out of you once again. I feel your presence everywhere Glad, even when you aren\'t here, it\'s ironic, how the moment you\'re gone, I always seem to connect everything to you. Your presence is what I always feel, I wish I can tell you how I felt this August 2, cause everything seems to be all about you.", // Day 4
+    "August 3, 2026 - This day, I asked myself, who\'s gonna watch me play now? See all my highlights, glaze me if something great happened in my games, who\'s gonna say \"Can I watch?\". Honestly, everytime I play, I always catch myself going to our discord server, trying to see if you\'re online, or trying to see what i\'m doing, or trying to see if you would message \"Can I watch?\" As I woke up earlier this morning, I thought of you, do you still think about me? Do you think about me like how I think about you everyday? I wish I could ask you just like before, a little assurance would help me right now. I always ask myself, \"Am I a fool, for getting these thoughts?\" I wish you\'d randomly message me, \"I still care Keane.\" cause these thoughts are getting the best of me. I wanna know badly if you still check up on my accounts, my statuses, my bios, my games, my socials, it\'s something that makes me smile, cause that\'s how I see a person caring for me. \n\n I actually saw your ig account, \"2amdancer\", put on a note, I hope when you\'re reading this, you still remember the note, cause I forever will, I also saw the song in your bio, many thoughts came into my mind, one is why? All of the sudden you suddenly put that on, activated that account, put on those notes, the bio, the song, the 444. I tried to not think about it, but I can\'t, I wanna know why. Then after a few hours, you blocked or deleted the account, so now I\'m left with the question, what\'s the reason behind those actions, was it for me? Or was it for him. \n\nActually on august 2, me and rei went to aslag (Barbershop), we both got a cut, and you know our barber knows you and about us, so he asked, and I answered disappointed that we aren\'t together anymore. Then our barber pinag tripan ako, it\'s quite funny cause, he asked rei, if may sinasabi ka raw ba kay rei, he did that for me, even though I didn\'t wanna know or ask rei, and so, eventually, when we\'re alone na, I asked. But didn\'t quite get the answer I was hoping for. \n\nI played with your brother earlier, just for a short time, the reason is I\'m having fun while playing with him, kahit we don\'t usually talk in the game or anything, but I hope that everytime that we do, he mentions me to you, that\'s my way of presenting my presence to you. Although it might sound forceful, but I still wanna make sure that you see me, and I wanna show you I still care. But I still see your reposts in tiktok, about having peace being alone, not being in relationships, I respect it, and it also hurts, I don\'t know why but I feel like your feelings for me is drifting away, It hurts me thinking about it, but still as I writing this down to you, I\'m still thinking of winning you back, no matter what.", // Day 5
+    "August 4, 2026 - Hey Gladibelle, i\'m back here once again, and writing this down, earlier when I was going to school, at the jeep, I couldn\'t stop thinking about you, you know, when you do something like, put on a note, repost or something, I always think about it. I contained myself from talking to you earlier, I stopped myself, cause how can you move on from me if I didn\'t? I don\'t even know why i\'m here trying to write this down, you might not even read this all when you receive this. I can tell people will say i\'m a fool for doing these stuff, but I don\'t care, I just wanna show you, how much I\'ll do to be with you once again. I miss you so much :(. \n\nWell if you\'re reading this, well be it by yourself, with someone, or maybe even with me, I want you to please hug me, message me, or something. I want something out of you already, that\'ll make my day so much, I\'ll take it as an huge assurance that you still care, you\'re still here, you still choose me. Craving this much isn\'t normal, but for how much I am yearning for you, that\'s all I wanna ask. \n\nAs early as now, I wanna chat you out of the blue, ask about your day, tell what happened to mine, give you chikas, make fun of people that I find funny, talk about how I hate school, talk about how HAU isn\'t the same anymore. You know, writing this down, It makes me teary, I constantly think of what I\'ll do if you got over me, moved on, liked someone else, can I still win you back? It\'s scary Glad, but I myself understand that I caused all of this, so I must endure every single second of it. I\'m still curious if you still think about me, do you ask yourself the same things I ask myself. Does it also make you question, what happens in my days? \n\nGladibelle, as I write this, I actually just realized that the day I made this website, its exactly \"114 days\" from your birthday, If that\'s alignment then I believe it, how can it exactly be my favorite number and your favorite number combined? I asked for a sign, then it provided, asking for more might be too much, so I\'ll stick to this, I hope this confidence of mine continues, even without the assurance I need. \n\nI found myself rereading our old convo on your \"2amdancer\" account, I find it funny how fast things can change, I couldn\'t believe that we we\'re that close, then suddenly ganto. I hate it, I hate it so much, I want to go back what wse were last time, I miss us :(. \n\nI couldn\'t contain myself Glad, i\'m sorry, I can\'t take it. The thought of us not talking ulit after this is hurting me, if only, if only we could do this everytime. All this talking and the very next day, it\'s like we don\'t know each other again.", // Day 6
+    "August 5, 2026 - Hey, I can\'t process what\'s in my mind Glad, I\'m thinking a lot of things when you suddenly said you aren\'t entertaining someone and yung iba mo pang sinabi, pero you know, before that, before mo sabihin, I was fine eh. I can\'t tell myself what making me feel like this, right now, I wanna ask you, what\'s the point of messaging me? I can\'t think of ways to make myself feel okay, I find those messages as something I can\'t clearly think of, Glad my mind is mess already, and I\'m sorry. Are you still trying to keep me? Is this an assurance? We recently stopped, but how can you also say you aren\'t entertaining someone. It\'s like keeping me somewhere on an enclosed gate. I\'m hurting so much Glad, these tingling feelings inside my chest cannot stop, every distractions I try to do, does nothing to what I\'m feeling. I wanna stop thinking about you, so I can focus on myself, the things I want, pero sometimes, I can\'t contain it within myself, I reach out, and everytime I do, please know that I always, ALWAYS stop myself from doing so, and if you ever got a message from me, I tried so hard Glad. I\'m sorry, I could not give you the peace you wanted. \n\nPero the day before this we talked, I was fine, actually I was so fine that we talked, then you storied, I was fine with it, I was okay, I purposely didn\'t heart it so you have the chance to move on from me without thinking that I still like you. Then I got that from you, maybe the right question here is \"Do you still think about me, the way I think about you?\" Do we still have the same feelings for each other? I know you wouldn\'t entertain them, you won\'t you said that to me also, but please don\'t remind me na, I was the reason why you\'re like that, I wanna ask will you, will you ever choose me again? \n\nIt\'s actually nice that someone did that for you, I hope you know I also appreciate them, its nice you appreciate them and story them, it makes them feel seen, that\'s also a drive they would always chase. They want you Glad, It\'s nice they want you, rejecting them won\'t make them stop, not entertaining them does. I know how guys think, cause I am one of them. I could tell you this, pero no, you have your ways of not including them in your life. \n\nI wish this day could already pass, having these thoughts is hard, I can\'t think clearly. Maybe only you could fix this, I miss you so much. \n\nI got better when I went out, but hey I still couldn\'t stop thinking about you, I think this is bad, you\'re moving on from me, but still here I am hoping that one day, we get back together, I am a fool, please say it to my face.", // Day 7
+    "August 6, 2026 - OMG GLADIBELLE, I LIKED YOUR REPOST BY ACCIDENT, WHAT THE FUCK BYE BYE BYE BYE. \n\nAnyway, I stalked ur tiktok non stop, every time I see a repost about love or something, getting married, about loml, I legit think you\'re hinting me to comeback to you, I do, every repost, every song on that tiktok, I searched every meaning of those songs, I always try to connect them to me, not until I saw a repost about \"You genuinely think you aren\'t going to be in a relationship\" that hit hard Glad. It really did \n\nThat\'s when I realized, that I am a fool, I asked myself \"bakit ko ba siya pinipilit ayaw na nga.\" But I don\'t ever wanna give up on you, so here I am, I\'m sorry pero, when I want someone, I\'ll do whatever it takes to get that person, and that\'s you. So what if I end up alone when you don\'t wanna be in a relationship, then let\'s be alone together!! :)", // Day 8
+    "August 7, 2026 - I got drunk again Glad, I wanted to chat you, and tell you what I feel about you, what I said to you is true, although I cannot remember everything, but I did what I wanted, to talk to you. and I did, i\'m sorry for doing this, pero I want you and you only. I won\'t find anyone else, that\'s the punishment I\'ll endure, even if it meant being alone til death, I was the cause that you\'re like that, then why do I deserve to be free while you\'re like that. \n\nI asked you ulit Glad, and I still will, always, I\'m not stopping til you block or get mad at me. I won\'t give up Glad, I hope you realize that, I wanna earn that trust back Glad, I want to, I even said to you na I\'ll earn it back, kasi I want, gusto ko talaga, I\'m sorry na ganto ako pero I want you, and you only. \n\nI\'m sorry I hurt you Glad, that liked reel isn\'t about being a fool, I apologize, please, I think its better if I legit just cut everything connecting to you, kasi all I ever did is truly hurt you, can\'t you see for yourself, how big of an impact I did ever since I came to you life. I am the reason why you don\'t ever wanna be in a relationship again, I am the reason you are hurt this much, I am the reason why you can no longer trust someone, even if you said na you were hurt before, I just made the wound deeper. \n\nIt hurts me to see you like that while ako ganto, I don\'t deserve to be like this tas what I did to someone is restraining, I hate it, I hate myself for that. Tas ikaw pinipilit mong okay lang kahit hindi? What I did is something that should be punished really, I really hate myself for that, I wanna go away, I wanna be gone, I was a mistake, and will always be one. You still choose to protect me even after what I did to you, we aren\'t quits, I don\'t deserve to have a peaceful life. I wanna give everything back to you, and I will, firstly being this one and many more to come.", // Day 9
+    "August 8, 2026 - Hey, just so you know, I couldn\'t stop thinking about you, I endured every single second of this day, thinking about you. I kept on checking messages that isn\'t coming, I kept on checking on you socials, everything, everytime, and everytime I saw something new on your socials, I just smile. At one point I saw you online on discord, I waited on our server, I waited for a message, I waited for something, atleast something, that didn\'t came. \n\nWe had our tryouts today!! I was kinda hoping that you\'d watch, I put on notes, about it, shared a pic on IG, but nothing came, everytime I died, I\'ll alt+tab to discord, waiting to see you you\'d ask, if you wanna watch, I still held to that hope, I was really hoping you\'d message that day.", // Day 10
+    "August 9, 2026 - The day where I almost broke up, I genuinely see that you aren\'t into relationships anymore, the baddest thing for me, cause I promised myself Glad that I\'ll really never find someone else, and I wanna keep that promise forever, that was my punishment. I legit almost removed everything that was about you on all my socials, the \'g\' in my discord, the \#007FFF hex code in discord, the highlights that had your hairtie, the bear, everything, but I still held on. \n\nHonestly, everytime I see you repost about things like \"Being alone\", \"Not being in relationships\", \"Trusting no one\", It breaks me so much, I hate that I made you into the person you are today. I hate myself cause of that, I hope that as you\'re reading this, you have changed your mind. I hope that you\'re willing to try again, try risking again, try being in a relationship again, try again, with me. \n\nThe first paragraph was written on midnight, well this, I wrote it at 6:02 PM, I\'m sorry but I can\'t take it anymore, although I\'m still fighting the urge to be with you after my thoughts got me, I just can\'t anymore. I want you to know that, I still stalk you, I still see your repost, I still try to find the things you want and you like, your repost doesn\'t connect to what you say to me, and it hurts so much that I still see you\'re repost, about wanting love. I\'m confused, so confused, I can\'t continue being like this, so here I am writing this down, cutting you off this time, I don\'t ever wanna stalk you again, I don\'t wanna see how you continue your life anymore, cause as I look back, It just hurts me. Thank you.. \n\nMaybe the following days I\'ll change my mind, you leaving me with these thoughts is giving me a hard time, I can no longer continue fighting. I can\'t ask you for the assurance I want right now, I don\'t wanna be rejected ulit. I\'m not moving on, I\'ll wait til NOV 20, until I sent this, then I\'ll decide after that day, but right now, I can\'t be connected to you, I\'ll end up hurting myself just by seeing what you repost, maybe I am just confused. \n\nYou see how I can\'t stop myself, I removed the \'g\' and the hex code in discord, then suddenly you removed almost all of your repost, I still messaged you if you were fine cause I don\'t wanna be the cause of that suddenly mass removal of your repost. I didn\'t actually removed it, I replaced it into a morse code \"Dash Dash Dot Dot Dot\" which translates to \'7\' the meaning of that 7 being the 7th letter of the alphabeth, \'g\', I thought you would message me about it when I reached out first, turns out you wont, that\'s when I realized you don\'t care anymore. I just hit myself back by messaging you, I thought you would ask, but when you didn\'t it hit, hard, I end up hurt once again. I\'m sorry.", // Day 11
+    "August 10, 2026 - Hey, We talked and even played a Val game, that\'s something I didn\'t expect. But hey it happened, and I am grateful. Honestly, nag papansin ako sayo, I never thought na you wouldn\'t care na talaga. I\'m end up just hurting myself ulit, I expected something, that\'s why I sent you my 1000+ lines of code, I really thought you would be really curious to the point that you would try to take it from me, I would\'ve gave in Glad. But nothing I expected happened, this is the day I realized, you really aren\'t into me anymore, you aren\'t into being in love anymore, I\'m smiling that you chose yourself, but crying at the same time. \n\nI\'m still glad that you approached me first when Riley needed help, I am really really glad that I could help, but you know? I thought to myself na, in the coming days, ganto nlng tayo, talking to each other when the other needs help, I don\'t want that. I\'m sorry Gladibelle, please come back, I miss you so much, please. Here I am begging here, you know why? Cause telling you all these stuff would lead to nowhere. You\'ll end up frustrated, mad at me, so what else can I do? I don\'t wanna ever disturb you asking you to come back, I\'ll stop. Actually no, this is will be the last, I\'m sorry if this ruins your birthday, but I\'ll still ask anyway, if you\'re reading this, can we start over?", // Day 12
+    "August 11, 2026 - The day I noted \"Sign of the times by Daniel Caesar\" again, the reason is simple, I saw \'1111, 444, 555\' on the same jeep, SAME JEEP, and I remembered na the most note I noted you remembered is the same song, and cause of the \"signs\", so I think that you thought of \"I found signs\". \n\nRiley talked to me about her needing help, I am willing to help her, but when she mentioned that I needed to go to your house, or maybe ours, I was confused, I can help her through chat, I am embarrassed to even show up, nahihiya ako sayo, and sa family mo, I honestly can\'t, that\'s why I was so hesistant, well I still went, kasi I wanted to help, I was honestly nasa baba nyo for like 30 or more minutes, only to go home kasi Riley didn\'t tuloy pala, although okay lang naman, kasi same outcome even if she did punta. \n\nOh hey, as this day went, I thought that you deleted your \"2amdancer\" account, then I saw it got reactivated, with me removed as a follower. Well if you actually know me, I get bitter with things like this, I get mad specially if the person is really special to me, with the things that\'s currently happening, lalo na andaming nangyare talaga (with me only), I can\'t take it, so I guess this is where I finally give in, I can\'t see the part where you\'re hurting when I said that I\'m finally cutting you off, when you can do it yourself, you did it once you even blocked me. Now you unfollowed me, then I saw it, that\'s when it\'s fucked up. I hate this side of me, when I\'m like this I go from caring to \"Fuck it\", anyway I promised myself to finish this website til the 114 days is over, so please continue reading. I\'m sorry for the words and thank you. \n\nI guess I\'m just to hurt na to continue, I don\'t have the right to say this, pero seeing the person I want and will love not caring about me really hurts, and that\'s that last line I could maybe endure. I don\'t wanna go any further, I don\'t wanna get hurt ulit.", // Day 13
+    "August 12, 2026 - Today felt really weird, I asked you today ulit, but you ignored it, after seeing what you did, I really felt that you didn\'t care at all, that\'s what I saw from you, and that really hit me hard in the heart, I was hurt. You also said sorry when you heard that It was the only time I said something about my ex, you didn\'t have to, you just didn\'t know what to say to me, that\'s why you said sorry, I can tell Glad. Why can\'t you say that you hate me, why can\'t you say that you\'re mad at me, don\'t make me figure it out please, it hurts me a lot, kasi I can tell you are. I can tell na that\'s the reason you don\'t wanna trust me again, you don\'t want to try with me again. \n\nI didn\'t know why you also had to deactivate your account, I didn\'t wanna ask kasi I wanna distance myself from you na, it hurts me kasi the person I want hindi ko na makakasama talaga, you, I hate seeing the person I want na nanjan lng, hindi ko malapitan, hindi ko mabigay yung pagmamahal na gusto ko ibigay, I hate it. I know na it was my fault rin, wala akong reason don, but if there is ever a world na I can get another shot of getting your trust back, everytime, I will take that shot. Pero right now I wanna distance myself and give the space you need, It hurts me rin, pero It is for the best, for us to have no contacts. From this day on, I wouldn\'t repost anything, besides something that really gives me interest, I hope you\'re doing fine on this day, I hope the following days will give you the peace you truly deserve, and I hope that you finally heal from all the things I did.", // Day 14
+    "August 13, 2026 - Hello! Today felt normally weird, like I don\'t know why I\'m feeling like this. Although something never left my mind, the likes that bothers you, I know you read what I sent and all, I know you didn\'t wanna tell me, so I stopped. I don\'t wanna ruin more of your days just because of me asking, so I left it there. I didn\'t know that my likes bothered you so much, so I guess I\'ll hide them, I tried to lessen my screentime on both tiktok and IG so I won\'t be able to repost as much, only the things I really liked. But it never stopped me from looking at your profile everytime I wanted to. Honestly, I think I look at your profile more than I watched reels or tiktok, I don\'t know why but I find that funny. \n\nToday I made changes to this website, I won\'t tell you what, but it\'s something that I will always remember cause this is the day I realized, how much I really feel for you. This entry for today may be small, but for me, it is the biggest, the impact you made to my life gave me another definition to what \"Greatest love\" is, so thank you Gladibelle.", // Day 15
+    "August 14, 2026 - Hey Gladibelle, today I somewhat felt really weird, I got a weird feeling that you did something, but I don\'t know what. I kept on checking on your socials, everything, but your presence seems to be gone. I\'m honestly always tryna find it, and seeing you not being active makes me restless, or anxious, I seems to always look at myself and ask, \"Do I ask about her day?\" But I always stop myself, cause everytime we talk, it always ends badly. \n\nRei told na you aren\'t home by midnight, and it got the best of me, I\'m honestly so close to chatting, or maybe even calling, and act drunk and all just to know what you\'re up to, maybe I am missing too much that even a slight presence of you would really be enough for me to stop. I still wish that you somehow reach out to me, and have a little talk, that would be suffice enough, I still wanna know if you like me as much as before. I wanna know how you\'re doing. I wanna know what have you been up to. I wanna know hows the healing phase of you right now. I wanna know you, I wanna get to know you more.", // Day 16
+    "August 15, 2026 - You know I just wished that I could talk to you today, I noticed that you\'re no longer that active on everything, I wanted to ask why, you also aren\'t checking me frequently on discord anymore like you used to, maybe you just got over me that quick, maybe you no longer care about me as much as before, maybe you realized I wasn\'t really that worth it. It hurts me seeing you like that, even for me to say those, I never thought it would come to my mind that you would see me that way, until now. I wish I could ask you right now, I hoped about you reaching out today, but I got the opposite thing, you didn\'t show your presence, not even that green icon on discord I always wanted to see. \n\nSo if for you this is goodbye, for me it isn\'t as I am writing this down, I still constantly check on you, I still connect those repost of yours to me, always. Even if it hurts me, even if it was about you, I regret everything I did to hurt you, I just wish, I wish you gave me another shot to earn your trust back. \n\nAlso you saying \"Isn\'t you that broke my trust.\" that thing really did hit me, for me I saw that as \"You aren\'t getting another chance buddy.\" You saying that really hurt me, I don\'t wanna reach out ulit cause of that, even though I still want to earn your trust back, that hit the pillar of my morale Glad, I feel like i\'m going to give up any day now, I even asked stephen if I should continue \"making this website\" but didn\'t tell him about what I really felt, he just said \"Ikaw bahala pre.\" \n\nRight now I really need someone to talk to, and I want it to be you, I was honestly so close to faking drunk texting you, just so I can get something from you. Right now Glad, I\'m smiling, not cause I\'m happy, or something, but something I would rather stay quiet about. I just wished I could talk to you, just this day, your presence would really matter, it would give me the motivation, the morale I need to fully commit to this website, I just wished right now that you can read everything here right now.", // Day 17
+    "August 16, 2026 - Hello, you know, I kept on thinking that you\'re no longer thinking about me, you no longer care like before, I\'m thinking that you finally moved on, that\'s great! But it on my part it hurts, almost, almost is never enough for me. But it was my fault, I can\'t undo what I did, so I guess i\'ll just accept it, so I guess, it starts this day. Although everyday I am still hoping, so I am still here, but is slowly accepting that you are slowly getting further and further away. \n\nI saw you checked on discord once again, the first time again in like 2 days? I was kinda hoping that you\'d wanna talk, but I didn\'t receive any message. Honestly I smiled when I saw you online on discord, it got me thinking, where do you exactly want me? I don\'t want to be here where we\'re just like this, I don\'t wanna stay friends, cause I don\'t see you as a friend Gladibelle. I\'d rather cut you off, cause I don\'t wanna see the person I want and love to be just friends. It hurts me seeing us just being like this, I still respect what you decided, but I still am hoping that you would risk once more for me. \n\nBut you know, I lowkey wanna just talk to you once and for all and ask what do you really wanna do, cause I think I can no longer keep this up, hiding and all, keeping all these feelings hidden.", // Day 18
+    "August 17, 2026 - You know what I hate about myself, all those things I said these past days, feels like nothing, I still find myself back to stalking you, looking at all of your repost, checking if you\'re online on discord, a new note, a new repost. I\'m gonna be honest, I constantly check it, saw everything you reposted, noted, then deleted it right after 1 minute, I saw everything. I don\'t know Glad, I know you don\'t want to try, but seeing your repost, it\'s giving me false hope, what i\'m receiving are mixed signals, I know it myself, still, I still want to talk to you, I still considered where you wanna stand, and I fought myself to not chat you. I don\'t understand why you\'re reposting those reels, those tiktoks, I don\'t know why, I wanna know, I wanna know why are you reposting those, for what? Is it for me? Is it for someone else? I can\'t stop thinking about it. \n\nSeeing you repost those, makes me wonder if you want me to chat, or wanna try again. It makes me want to chat you, at the same time I don\'t want to. I don\'t wanna see you reject me once again, I don\'t want to ruin your day again. I would rather sit like this, than disturb you for something you already said to me, something na ayaw mo nang sabihin ulit. I\'m sorry. \n\nBut you know, I learned to cook today, I cooked GINILING!! It was fun, really, I had hope you\'re here to see, or witness what I just did. I also saw you playing val, it was I hope you\'re having fun playing even without the person that made you like that game.", // Day 19
+    "August 18, 2026 - I see that your brother found his new \"BAYAW\" I don\'t know Glad it hit me so hard, that I couldn\'t fight myself from talking to you, and so I did. Seeing your energy, I really feel like there\'s something new, it is him? Or maybe because I can no longer hold you like before. I hate it Glad. I really hate it, seeing your brother find someone new for you hits harder, and I couldn\'t take it, so I reached out. I\'m sorry I did, you were doing so great without me, I shouldn\'t had reached out. And I made it all go back. \n\nI don\'t know why I keep on teasing you about this website, maybe because I don\'t want you getting over me or something else, but I\'ll thank you on the little talk we had, I just wished, na meron akong lakas na itanong ulit sayo, to try again. Pero wala na, I can\'t, I don\'t want you to say it to me ulit, It\'ll hurt me more than you think. I\'m so sorry Gladibelle, that we turned out like this because of me, I\'m really sorry that I hurt you, made you think trust on other people isn\'t worth it anymore. But I hoped that you would really decide for us, I had hope that you would wanna try again. I really did, I stayed quiet kasi ayaw ko na talaga na ako nag ulit ang mag tatanong, I hate it. I hope that what you reflected is something you cherish, I really hope you do. For me, I\'ll take it til my grave, I just wish that once you\'re reading this, it\'s all complete and maybe, JUST maybe I am right beside you.", // Day 20
+    "August 19, 2026 - Nothing much happened this day, my day really went through so fast that I didn\'t even realized that it was already done. This will probably the calmest day I ever experienced yet, I got so much to do that I had so much fun, I didn\'t stalk you like I used to, I played and played and played, until the day really went through. Although it looks normal for me, I still couldn\'t stop myself from thinking about you though, I still saw all of your new reposts, the reposts you removed, everything. \n\nI actually am keeping track of your followers, and I actually saw you have new mutuals! If you really know me, you know what I\'ll be thinking about them, your new mutuals, after what I saw in rei\'s story, I sure hope that no hatred grows in me when im tryna look for something, cause you might trigger something in me that I don\'t want. I hope that you are being true to your word, cause I\'ll think about it, really really deep.", // Day 21
+    "August 20, 2026 - Saw you changed your profile in your discord! I can\'t ask why, but I wanna know. It actually made me think that you are over me, and it really hit me in the chest. I got me thinking about it Glad, look, even your smallest actions gives the thoughts of something big, aren\'t I so inlove? I hate to admit it, I fell in love with you when you were gone, I don\'t want to admit it, I hate it that I\'m feeling this way when the person isn\'t even in my hands anymore. \n\nThis day we will be drinking ulit, I hope this time nothing happens, kasi I don\'t wanna ruin your peace ulit, you\'re doing great without me, and I wanna keep it that way, I hope you keep it that way, I hope you get over from all the things we do parin! And I am praying that you always stay safe, from everyone, everything, every bad things in this world. \n\n", // Day 22
+    "", // Day 23
+    "", // Day 24
+    "", // Day 25
+    "", // Day 26
+    "", // Day 27
+    "", // Day 28
+    "", // Day 29
+    "", // Day 30
+    "", // Day 31
+    "", // Day 32
+    "", // Day 33
+    "", // Day 34
+    "", // Day 35
+    "", // Day 36
+    "", // Day 37
+    "", // Day 38
+    "", // Day 39
+    "", // Day 40
+    "", // Day 41
+    "", // Day 42
+    "", // Day 43
+    "", // Day 44
+    "", // Day 45
+    "", // Day 46
+    "", // Day 47
+    "", // Day 48
+    "", // Day 49
+    "", // Day 50
+    "", // Day 51
+    "", // Day 52
+    "", // Day 53
+    "", // Day 54
+    "", // Day 55
+    "", // Day 56
+    "", // Day 57
+    "", // Day 58
+    "", // Day 59
+    "", // Day 60
+    "", // Day 61
+    "", // Day 62
+    "", // Day 63
+    "", // Day 64
+    "", // Day 65
+    "", // Day 66
+    "", // Day 67
+    "", // Day 68
+    "", // Day 69
+    "", // Day 70
+    "", // Day 71
+    "", // Day 72
+    "", // Day 73
+    "", // Day 74
+    "", // Day 75
+    "", // Day 76
+    "", // Day 77
+    "", // Day 78
+    "", // Day 79
+    "", // Day 80
+    "", // Day 81
+    "", // Day 82
+    "", // Day 83
+    "", // Day 84
+    "", // Day 85
+    "", // Day 86
+    "", // Day 87
+    "", // Day 88
+    "", // Day 89
+    "", // Day 90
+    "", // Day 91
+    "", // Day 92
+    "", // Day 93
+    "", // Day 94
+    "", // Day 95
+    "", // Day 96
+    "", // Day 97
+    "", // Day 98
+    "", // Day 99
+    "", // Day 100
+    "", // Day 101
+    "", // Day 102
+    "", // Day 103
+    "", // Day 104
+    "", // Day 105
+    "", // Day 106
+    "", // Day 107
+    "", // Day 108
+    "", // Day 109
+    "", // Day 110
+    "", // Day 111
+    "", // Day 112
+    "", // Day 113
+    "", // Day 114
+  ],
+
+  whyText: "message",
+  whoText: "message",
+
+  songs: [
+    // ---- calm opener: this is what plays first when "one last thing" is tapped ----
+    { title: "Paraluman", artist: " Adie", duration: "—", src: "music/Adie - Paraluman (Lyrics).mp3" },
+    { title: "You'll Be Safe Here", artist: " Adie", duration: "—", src: "music/You'll Be Safe Here - Adie  OST of the VivaMax Movie '366' (Official Lyric Video).mp3" },
+    { title: "Panaginip", artist: " Nicole", duration: "—", src: "music/Panaginip - nicole (Lyrics).mp3" },
+    { title: "Somewhere Only We Know", artist: " Keane", duration: "—", src: "music/Keane - Somewhere Only We Know (Official Music Video).mp3" },
+    { title: "Leonora", artist: " Sugarcane", duration: "—", src: "music/SUGARCANE - Leonora (Official Lyric Video).mp3" },
+    { title: "I Don't Wanna Be Okay Without You", artist: " Charlie Burg", duration: "—", src: "music/I Don't Wanna Be Okay Without You.mp3" },
+    { title: "Kathang Isip", artist: " Ben&Ben", duration: "—", src: "music/Kathang Isip.mp3" },
+    { title: "Be With You", artist: " The Ridleys", duration: "—", src: "music/Be With You.mp3" },
+    // ---- gradually warming up: chill mid-tempo ----
+    { title: "Who Knows", artist: " Daniel Caesar", duration: "—", src: "music/Daniel Caesar - Who Knows (Lyrics).mp3" },
+    { title: "Japanese Denim", artist: " Daniel Caesar", duration: "—", src: "music/Daniel Caesar - Japanese Denim (Lyrics).mp3" },
+    { title: "urs", artist: " Niki", duration: "—", src: "music/urs.mp3" },
+    { title: "Enchanted", artist: " Taylor Swift", duration: "—", src: "music/Taylor Swift - Enchanted.mp3" },
+    { title: "When I Met You", artist: " APO Hiking Society", duration: "—", src: "music/APO Hiking Society - When I Met You (Official Lyric Video).mp3" },
+    { title: "Make It With You", artist: " Ben&Ben", duration: "—", src: "music/Make It With You - Ben&Ben (Lyrics).mp3" },
+    { title: "Araw-Araw", artist: " Ben&Ben", duration: "—", src: "music/Ben&Ben - Araw-Araw  Official Lyric Video.mp3" },
+    // ---- full chill/upbeat close ----
+    { title: "Best Part", artist: " Daniel Caesar", duration: "—", src: "music/H.E.R. - Best Part (Lyrics) Ft. Daniel Caesar.mp3" },
+    { title: "Rearrange My World", artist: " Daniel Caesar & Rex Orange County", duration: "—", src: "music/Daniel Caesar, Rex Orange County - Rearrange My World (Audio).mp3" },
+    { title: "My Favorite Part", artist: " Mac Miller", duration: "—", src: "music/Mac Miller - My Favorite Part (feat. Ariana Grande).mp3" },
+    { title: "Never Not", artist: " Lauv", duration: "—", src: "music/Lauv - Never Not [Official Audio].mp3" },
+    { title: "About You", artist: " The 1975", duration: "—", src: "music/The 1975 - About You (Official).mp3" },
+    { title: "fallingforyou", artist: " The 1975", duration: "—", src: "music/The 1975 - fallingforyou.mp3" }
+  ],
+
+  // ---- Top 100 playlist (clean titles, ranked order preserved via array order) ----
+  // Files expected in a "top100/" folder next to this html, matching these exact
+  // filenames. Fill in "artist" for any of these if you'd like it shown in the player.
+  top100Songs: [
+    { title: "Roxanne", artist: " Chase Atlantic", duration: "—", src: "top100/Roxanne.mp3" },
+    { title: "Purple Rain", artist: " Prince", duration: "—", src: "top100/Purple Rain.mp3" },
+    { title: "damned", artist: " Miguel", duration: "—", src: "top100/damned.mp3" },
+    { title: "All I Need To Hear", artist: " The 1975", duration: "—", src: "top100/All I Need To Hear.mp3" },
+    { title: "Paradise", artist: " Chase Atlantic", duration: "—", src: "top100/Paradise.mp3" },
+    { title: "Into It", artist: " Chase Atlantic", duration: "—", src: "top100/Into It.mp3" },
+    { title: "Somebody Else", artist: " The 1975", duration: "—", src: "top100/Somebody Else.mp3" },
+    { title: "You Are In Love (Taylor's Version)", artist: " Taylor Swift", duration: "—", src: "top100/You Are In Love (Taylor's Version).mp3" },
+    { title: "Delicate", artist: " Taylor Swift", duration: "—", src: "top100/Delicate.mp3" },
+    { title: "Fallingforyou", artist: " The 1975", duration: "—", src: "top100/Fallingforyou.mp3" },
+    { title: "If I Believe You", artist: " The 1975", duration: "—", src: "top100/If I Believe You.mp3" },
+    { title: "Consume (feat. Goon Des Garcons)", artist: " Chase Atlantic feat. Goon Des Garcons", duration: "—", src: "top100/Consume (feat. Goon Des Garcons).mp3" },
+    { title: "Wicked Games", artist: " The Weeknd", duration: "—", src: "top100/Wicked Games.mp3" },
+    { title: "Kiss It Better", artist: " Rihanna", duration: "—", src: "top100/Kiss It Better.mp3" },
+    { title: "Love Me Harder", artist: " Ariana Grande & The Weeknd", duration: "—", src: "top100/Love Me Harder.mp3" },
+    { title: "Love Me Like You Do", artist: " Ellie Goulding", duration: "—", src: "top100/Love Me Like You Do.mp3" },
+    { title: "Do I Wanna Know? - Live At the BBC", artist: " Hozier", duration: "—", src: "top100/Do I Wanna Know? - Live At the BBC.mp3" },
+    { title: "Reflections", artist: " The Neighbourhood", duration: "—", src: "top100/Reflections.mp3" },
+    { title: "Hold Your Breath", artist: " Chase Atlantic", duration: "—", src: "top100/Hold Your Breath.mp3" },
+    { title: "coffee", artist: " Miguel", duration: "—", src: "top100/coffee.mp3" },
+    { title: "HER", artist: " Chase Atlantic", duration: "—", src: "top100/HER.mp3" },
+    { title: "Fallen Star", artist: " The Neighbourhood", duration: "—", src: "top100/Fallen Star.mp3" },
+    { title: "Far Away", artist: " Nickelback", duration: "—", src: "top100/Far Away.mp3" },
+    { title: "Friends", artist: " Chase Atlantic", duration: "—", src: "top100/Friends.mp3" },
+    { title: "Oceans & Engines", artist: " NIKI", duration: "—", src: "top100/Oceans & Engines.mp3" },
+    { title: "The Walls", artist: " Chase Atlantic", duration: "—", src: "top100/The Walls.mp3" },
+    { title: "Earrings", artist: " Malcolm Todd", duration: "—", src: "top100/Earrings.mp3" },
+    { title: "Wildest Dreams", artist: " Taylor Swift", duration: "—", src: "top100/Wildest Dreams.mp3" },
+    { title: "Be That Easy", artist: " Sade", duration: "—", src: "top100/Be That Easy.mp3" },
+    { title: "Latch", artist: " Disclosure feat. Sam Smith", duration: "—", src: "top100/Latch.mp3" },
+    { title: "Roommates", artist: " Malcolm Todd", duration: "—", src: "top100/Roommates.mp3" },
+    { title: "A Couple Minutes", artist: " Olivia Dean", duration: "—", src: "top100/A Couple Minutes.mp3" },
+    { title: "How Many Drinks?", artist: " Miguel", duration: "—", src: "top100/How Many Drinks?.mp3" },
+    { title: "It Won't Stop (feat. Chris Brown) - EP Version", artist: " Sevyn Streeter feat. Chris Brown", duration: "—", src: "top100/It Won't Stop (feat. Chris Brown) - EP Version.mp3" },
+    { title: "Say It", artist: " Tory Lanez", duration: "—", src: "top100/Say It.mp3" },
+    { title: "Residuals", artist: " Chris Brown", duration: "—", src: "top100/Residuals.mp3" },
+    { title: "Save Your Tears (with Ariana Grande) (Remix)", artist: " The Weeknd feat. Ariana Grande", duration: "—", src: "top100/Save Your Tears (with Ariana Grande) (Remix).mp3" },
+    { title: "About You", artist: " The 1975", duration: "—", src: "top100/About You.mp3" },
+    { title: "Blessed", artist: " Daniel Caesar", duration: "—", src: "top100/Blessed.mp3" },
+    { title: "Hold Me Down", artist: " Daniel Caesar", duration: "—", src: "top100/Hold Me Down.mp3" },
+    { title: "Dress", artist: " Taylor Swift", duration: "—", src: "top100/Dress.mp3" },
+    { title: "we can't be friends (wait for your love)", artist: " Ariana Grande", duration: "—", src: "top100/we can't be friends (wait for your love).mp3" },
+    { title: "Nothin' on You (feat. Bruno Mars)", artist: " B.o.B feat. Bruno Mars", duration: "—", src: "top100/Nothin' on You (feat. Bruno Mars).mp3" },
+    { title: "Iris", artist: " The Goo Goo Dolls", duration: "—", src: "top100/Iris.mp3" },
+    { title: "Into You", artist: " Ariana Grande", duration: "—", src: "top100/Into You.mp3" },
+    { title: "Almost Is Never Enough", artist: " Ariana Grande feat. Nathan Sykes", duration: "—", src: "top100/Almost Is Never Enough.mp3" },
+    { title: "Versace on the Floor", artist: " Bruno Mars", duration: "—", src: "top100/Versace on the Floor.mp3" },
+    { title: "Statue", artist: " Lil Eddie", duration: "—", src: "top100/Statue.mp3" },
+    { title: "Ride", artist: " SoMo", duration: "—", src: "top100/Ride.mp3" },
+    { title: "Beautiful", artist: " Bazzi", duration: "—", src: "top100/Beautiful.mp3" },
+    { title: "Heaven", artist: " Bryan Adams", duration: "—", src: "top100/Heaven.mp3" },
+    { title: "Evergreen (You Didn\'t Deserve Me At All)", artist: " Omar Apollo", duration: "—", src: "top100/Evergreen (You Didn\'t Deserve Me At All).mp3" },
+    { title: "Can't Help Falling In Love", artist: " Elvis Presley", duration: "—", src: "top100/Can't Help Falling In Love.mp3" },
+    { title: "Rearrange My World", artist: " Daniel Caesar & Rex Orange County", duration: "—", src: "top100/Rearrange My World.mp3" },
+    { title: "Merry Christmas, Please Don't Call", artist: " Bleachers", duration: "—", src: "top100/Merry Christmas, Please Don't Call.mp3" },
+    { title: "I Don't Want to Miss a Thing - From \"Armageddon\" Soundtrack", artist: " Aerosmith", duration: "—", src: "top100/I Don't Want to Miss a Thing - From \"Armageddon\" Soundtrack.mp3" },
+    { title: "Lips Of An Angel", artist: " Hinder", duration: "—", src: "top100/Lips Of An Angel.mp3" },
+    { title: "Backburner", artist: " NIKI", duration: "—", src: "top100/Backburner.mp3" },
+    { title: "Get You (feat. Kali Uchis)", artist: " Daniel Caesar feat. Kali Uchis", duration: "—", src: "top100/Get You (feat. Kali Uchis).mp3" },
+    { title: "You And Me", artist: " Lifehouse", duration: "—", src: "top100/You And Me.mp3" },
+    { title: "Moonlight", artist: " Chase Atlantic", duration: "—", src: "top100/Moonlight.mp3" },
+    { title: "Cinderella (feat. Ty Dolla $ign)", artist: " Mac Miller feat. Ty Dolla $ign", duration: "—", src: "top100/Cinderella (feat. Ty Dolla $ign).mp3" },
+    { title: "Flatline", artist: " Justin Bieber", duration: "—", src: "top100/Flatline.mp3" },
+    { title: "Good Days", artist: " SZA", duration: "—", src: "top100/Good Days.mp3" },
+    { title: "Everyday", artist: " Ariana Grande feat. Future", duration: "—", src: "top100/Everyday.mp3" },
+    { title: "Do You Mind (feat. Nicki Minaj, Chris Brown, August Alsina, Jeremih, Future & Rick Ross)", artist: " DJ Khaled feat. Nicki Minaj, Chris Brown, August Alsina, Jeremih, Future & Rick Ross", duration: "—", src: "top100/Do You Mind (feat. Nicki Minaj, Chris Brown, August Alsina, Jeremih, Future & Rick Ross).mp3" },
+    { title: "Earned It (Fifty Shades Of Grey)", artist: " The Weeknd", duration: "—", src: "top100/Earned It (Fifty Shades Of Grey).mp3" },
+    { title: "DIE FOR ME", artist: " Chase Atlantic", duration: "—", src: "top100/DIE FOR ME.mp3" },
+    { title: "PILLOWTALK", artist: " ZAYN", duration: "—", src: "top100/PILLOWTALK.mp3" },
+    { title: "Perfect", artist: " One Direction", duration: "—", src: "top100/Perfect.mp3" },
+    { title: "The Alchemy", artist: " Taylor Swift", duration: "—", src: "top100/The Alchemy.mp3" },
+    { title: "Guilty as Sin?", artist: " Taylor Swift", duration: "—", src: "top100/Guilty as Sin?.mp3" },
+    { title: "Traphouse", artist: " Tory Lanez feat. Nyce", duration: "—", src: "top100/Traphouse.mp3" },
+    { title: "Pink Matter", artist: " Frank Ocean feat. André 3000", duration: "—", src: "top100/Pink Matter.mp3" },
+    { title: "Pyramids", artist: " Frank Ocean", duration: "—", src: "top100/Pyramids.mp3" },
+    { title: "Simple Things", artist: " Miguel", duration: "—", src: "top100/Simple Things.mp3" },
+    { title: "New Flame (feat. Usher & Rick Ross)", artist: " Chris Brown feat. Usher & Rick Ross", duration: "—", src: "top100/New Flame (feat. Usher & Rick Ross).mp3" },
+    { title: "Swim", artist: " Chase Atlantic", duration: "—", src: "top100/Swim.mp3" },
+    { title: "The Archer", artist: " Taylor Swift", duration: "—", src: "top100/The Archer.mp3" },
+    { title: "Godspeed", artist: " Frank Ocean", duration: "—", src: "top100/Godspeed.mp3" },
+    { title: "TBH", artist: " PARTYNEXTDOOR", duration: "—", src: "top100/TBH.mp3" },
+    { title: "So Far So Fake", artist: " Pierce The Veil", duration: "—", src: "top100/So Far So Fake.mp3" },
+    { title: "Tumblr Girls (feat. Christoph Andersson)", artist: " G-Eazy feat. Christoph Andersson", duration: "—", src: "top100/Tumblr Girls (feat. Christoph Andersson).mp3" },
+    { title: "Back To The Start", artist: " SoMo", duration: "—", src: "top100/Back To The Start.mp3" },
+    { title: "Time of Our Lives", artist: " Pitbull feat. Ne-Yo", duration: "—", src: "top100/Time of Our Lives.mp3" },
+    { title: "Never Be the Same", artist: " Camila Cabello", duration: "—", src: "top100/Never Be the Same.mp3" },
+    { title: "Drive By", artist: " Eric Bellinger", duration: "—", src: "top100/Drive By.mp3" },
+    { title: "Distraction", artist: " Kehlani", duration: "—", src: "top100/Distraction.mp3" },
+    { title: "party 4 u", artist: " Charli xcx", duration: "—", src: "top100/party 4 u.mp3" },
+    { title: "All That Matters", artist: " Justin Bieber", duration: "—", src: "top100/All That Matters.mp3" },
+    { title: "All Eyes on You (feat. Chris Brown & Nicki Minaj)", artist: " Meek Mill feat. Chris Brown & Nicki Minaj", duration: "—", src: "top100/All Eyes on You (feat. Chris Brown & Nicki Minaj).mp3" },
+    { title: "everytime", artist: " Ariana Grande", duration: "—", src: "top100/everytime.mp3" },
+    { title: "Last Night on Earth", artist: " Green Day", duration: "—", src: "top100/Last Night on Earth.mp3" },
+    { title: "White Ferrari", artist: " Frank Ocean", duration: "—", src: "top100/White Ferrari.mp3" },
+    { title: "Who Knows", artist: " Daniel Caesar", duration: "—", src: "top100/Who Knows.mp3" },
+    { title: "Honeymoon Avenue", artist: " Ariana Grande", duration: "—", src: "top100/Honeymoon Avenue.mp3" },
+    { title: "Ballin'", artist: " PARTYNEXTDOOR", duration: "—", src: "top100/Ballin'.mp3" },
+    { title: "Coming Down", artist: " The Weeknd", duration: "—", src: "top100/Coming Down.mp3" },
+    { title: "Angel", artist: " Massive Attack feat. Horace Andy", duration: "—", src: "top100/Angel.mp3" },
+    { title: "Distant Lover", artist: " Marvin Gaye", duration: "—", src: "top100/Distant Lover.mp3" },
+  ],
+
+  letterBody: "I removed something here.",
+
+  photoUrls: [
+    "photos/photo-1.jpg", // Photo 1 — e.g. "photos/photo-1.jpg"
+    "photos/photo-2.jpg", // Photo 2
+    "photos/photo-3.jpg", // Photo 3
+    "photos/photo-4.jpg"  // Photo 4
+  ],
+  bouquetUrl: "",    // leave empty to use the illustrated bouquet
+
+  togetherSince: "2026-07-29",
+  yourName: "Kled"
+};
+
+/* ============================================================
+   populate text content from CONFIG
+   ============================================================ */
+document.getElementById('heroName').textContent = CONFIG.herName;
+document.getElementById('heroTagline').textContent = CONFIG.tagline;
+// Playlist choice popup
+document.getElementById('choiceKicker').textContent = CONFIG.choiceKicker;
+document.getElementById('choiceTitle').textContent = CONFIG.choiceTitle;
+document.getElementById('choiceSub').textContent = CONFIG.choiceSub;
+document.getElementById('choiceOptOursTitle').textContent = CONFIG.choiceOptions.ours.title;
+document.getElementById('choiceOptOursSub').textContent = CONFIG.choiceOptions.ours.sub;
+document.getElementById('choiceOptTop100Title').textContent = CONFIG.choiceOptions.top100.title;
+document.getElementById('choiceOptTop100Sub').textContent = CONFIG.choiceOptions.top100.sub;
+document.querySelectorAll('.switch-btn[data-playlist="ours"]').forEach(el => el.textContent = CONFIG.choiceOptions.ours.title);
+document.querySelectorAll('.switch-btn[data-playlist="top100"]').forEach(el => el.textContent = CONFIG.choiceOptions.top100.title);
+// Daily-note reminder
+document.getElementById('dailyIntroKicker').textContent = CONFIG.dailyIntro.kicker;
+document.getElementById('dailyIntroTitle').textContent = CONFIG.dailyIntro.title;
+document.getElementById('dailyIntroMessage').textContent = CONFIG.dailyIntro.message;
+document.getElementById('dailyIntroContinue').textContent = CONFIG.dailyIntro.button;
+// Daily note book
+(function dailyNotes(){
+  const [year, month, day] = CONFIG.dailyStartDate.split('-').map(Number);
+  const start = new Date(year, month - 1, day);
+  const [endYear, endMonth, endDay] = CONFIG.dailyEndDate.split('-').map(Number);
+  const end = new Date(endYear, endMonth - 1, endDay);
+  const totalDays = Math.floor((end - start) / 86400000) + 1;
+  const formatDate = date => date.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+
+  document.getElementById('dailyNoteHeading').textContent = 'little notes, every day';
+  document.getElementById('dailyNoteDate').textContent = `${formatDate(start)} — ${formatDate(end)}`;
+  document.getElementById('dailyNoteCount').textContent = `${totalDays} days`;
+  document.getElementById('dailyNoteMessage').textContent = 'A small piece of my heart for every day in between.';
+
+  const heading = document.getElementById('dailyNoteHeading');
+  const dateEl = document.getElementById('dailyNoteDate');
+  const countEl = document.getElementById('dailyNoteCount');
+  const messageEl = document.getElementById('dailyNoteMessage');
+  const pageNumberEl = document.getElementById('dailyPageNumber');
+  const pageTotalEl = document.getElementById('dailyPageTotal');
+  const previousBtn = document.getElementById('dailyPrevBtn');
+  const nextBtn = document.getElementById('dailyNextBtn');
+  const jumpForm = document.getElementById('dailyJumpForm');
+  const jumpInput = document.getElementById('dailyPageJump');
+  let currentPage = 0;
+
+  function renderPage(){
+    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + currentPage);
+    heading.textContent = 'one last thing';
+    dateEl.textContent = formatDate(date);
+    countEl.textContent = `page ${currentPage + 1} of ${totalDays}`;
+    messageEl.textContent = CONFIG.dailyMessages[currentPage] || `Write your message for Day ${currentPage + 1} in the daily notes list.`;
+    pageNumberEl.textContent = `Day ${currentPage + 1}`;
+    pageTotalEl.textContent = `${currentPage + 1} of ${totalDays}`;
+    previousBtn.disabled = currentPage === 0;
+    nextBtn.disabled = currentPage === totalDays - 1;
+    jumpInput.max = totalDays;
+    jumpInput.value = currentPage + 1;
+  }
+
+  previousBtn.addEventListener('click', () => { if (currentPage > 0) { currentPage--; renderPage(); } });
+  nextBtn.addEventListener('click', () => { if (currentPage < totalDays - 1) { currentPage++; renderPage(); } });
+  jumpForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const requestedPage = Number(jumpInput.value);
+    if (!Number.isFinite(requestedPage)) { renderPage(); return; }
+    currentPage = Math.min(totalDays - 1, Math.max(0, Math.floor(requestedPage) - 1));
+    renderPage();
+  });
+  renderPage();
+})();
+document.getElementById('whyText').textContent = CONFIG.whyText;
+document.getElementById('whoText').textContent = CONFIG.whoText;
+
+/* ---------- reasons list (click/press to reveal) ---------- */
+(function renderReasons(){
+  const list = document.getElementById('reasonsList');
+  const reasons = (CONFIG.reasons || []).filter(r => r && r.trim());
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  if (!reasons.length) {
+    document.getElementById('reasonsTile').hidden = true;
+    return;
+  }
+
+  list.innerHTML = reasons.map((r, i) => `
+    <button type="button" class="reason-item" aria-expanded="false">
+      <span class="reason-num">${i + 1}</span>
+      <span class="reason-body">
+        <span class="reason-prompt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5c2-2.5 6-2.5 7.5.5 1.5 3-1 6.5-7.5 12-6.5-5.5-9-9-7.5-12 1.5-3 5.5-3 7.5-.5z"/></svg>
+          tap to reveal
+        </span>
+        <p class="reason-text">${esc(r)}</p>
+      </span>
+    </button>
+  `).join('');
+
+  list.querySelectorAll('.reason-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('revealed')) return; // stays open once revealed
+      btn.classList.add('revealed');
+      btn.setAttribute('aria-expanded', 'true');
+    });
+  });
+})();
+document.getElementById('signature').textContent = `coded late at night, with love — ${CONFIG.yourName}`;
+
+const letterPaper = document.getElementById('letterPaper');
+CONFIG.letterBody.split('\n\n').forEach(p => {
+  const el = document.createElement('p');
+  el.textContent = p;
+  letterPaper.appendChild(el);
+});
+
+(function photoCarousel(){
+  const carousel = document.getElementById('photoCarousel');
+  const orbit = document.getElementById('photoOrbit');
+  const nextButton = document.getElementById('nextPhotoBtn');
+  const position = document.getElementById('photoPosition');
+  const photos = Array.from({ length:4 }, (_, index) => CONFIG.photoUrls[index] || '');
+  const cards = [];
+  let activePhoto = 0;
+  let autoRotate;
+
+  photos.forEach((source, index) => {
+    const card = document.createElement('figure');
+    card.className = 'photo-card';
+
+    if (source) {
+      const image = document.createElement('img');
+      image.src = source;
+      image.alt = `Us, photo ${index + 1}`;
+      card.appendChild(image);
+    } else {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'photo-placeholder';
+      const label = document.createElement('strong');
+      label.textContent = `photo ${index + 1}`;
+      const prompt = document.createElement('span');
+      prompt.textContent = 'add a memory here';
+      placeholder.append(label, prompt);
+      card.appendChild(placeholder);
+    }
+    orbit.appendChild(card);
+    cards.push(card);
+  });
+
+  function layoutCards(){
+    const positions = ['is-front', 'is-right', 'is-left', 'is-back'];
+    cards.forEach((card, index) => {
+      card.classList.remove(...positions);
+      card.classList.add(positions[(index - activePhoto + cards.length) % cards.length]);
+    });
+    position.textContent = `Photo ${activePhoto + 1} of ${cards.length}`;
+  }
+  function movePhotos(direction){
+    activePhoto = (activePhoto + direction + cards.length) % cards.length;
+    layoutCards();
+  }
+  function startAutoRotate(){
+    window.clearInterval(autoRotate);
+    autoRotate = window.setInterval(() => movePhotos(1), 3200);
+  }
+
+  layoutCards();
+  startAutoRotate();
+
+  let dragging = false;
+  let startX = 0;
+  let dragDistance = 0;
+
+  function endDrag(event){
+    if (!dragging) return;
+    dragging = false;
+    carousel.classList.remove('dragging');
+    if (carousel.hasPointerCapture(event.pointerId)) carousel.releasePointerCapture(event.pointerId);
+    carousel.style.setProperty('--drag-offset', '0px');
+    if (Math.abs(dragDistance) > 40) movePhotos(dragDistance < 0 ? 1 : -1);
+    startAutoRotate();
+  }
+
+  carousel.addEventListener('pointerdown', event => {
+    dragging = true;
+    startX = event.clientX;
+    dragDistance = 0;
+    window.clearInterval(autoRotate);
+    carousel.classList.add('dragging');
+    carousel.setPointerCapture(event.pointerId);
+  });
+  carousel.addEventListener('pointermove', event => {
+    if (!dragging) return;
+    dragDistance = event.clientX - startX;
+    carousel.style.setProperty('--drag-offset', `${dragDistance * 0.45}px`);
+  });
+  carousel.addEventListener('pointerup', endDrag);
+  carousel.addEventListener('pointercancel', endDrag);
+  nextButton.addEventListener('click', () => { movePhotos(1); startAutoRotate(); });
+  carousel.addEventListener('keydown', event => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    movePhotos(event.key === 'ArrowRight' ? 1 : -1);
+    startAutoRotate();
+  });
+})();
+
+// day counter
+(function(){
+  const start = new Date(CONFIG.togetherSince);
+  const now = new Date();
+  const days = Math.max(0, Math.floor((now - start) / 86400000));
+  document.getElementById('dayCounter').textContent = isNaN(days) ? '' : `${days.toLocaleString()} days, and counting`;
+})();
+
+/* ============================================================
+   ambient background: stars + petals
+   ============================================================ */
+(function ambient(){
+  const root = document.getElementById('ambient');
+  for (let i=0;i<70;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    s.style.left = Math.random()*100+'%';
+    s.style.top = Math.random()*100+'%';
+    s.style.animationDelay = (Math.random()*4)+'s';
+    s.style.animationDuration = (3+Math.random()*3)+'s';
+    root.appendChild(s);
+  }
+  const glyphs = ['✿','❀','✾'];
+  const petalColors = ['#007FFF','#66b3ff','#808080'];
+  for (let i=0;i<14;i++){
+    const p = document.createElement('div');
+    p.className='petal';
+    p.textContent = glyphs[Math.floor(Math.random()*glyphs.length)];
+    p.style.color = petalColors[i % petalColors.length];
+    p.style.left = Math.random()*100+'%';
+    p.style.animationDuration = (14+Math.random()*12)+'s';
+    p.style.animationDelay = (-Math.random()*20)+'s';
+    p.style.fontSize = (10+Math.random()*10)+'px';
+    root.appendChild(p);
+  }
+})();
+
+/* ============================================================
+   hub <-> page navigation
+   ============================================================ */
+(function router(){
+  const pages = [...document.querySelectorAll('.page')];
+  const backBtn = document.querySelector('[data-back]');
+
+  function showPage(name){
+    pages.forEach(p => p.classList.toggle('active', p.dataset.page === name));
+    backBtn.style.display = (name === 'hub') ? 'none' : 'flex';
+    window.scrollTo(0,0);
+  }
+
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.goto;
+      if (target === 'daily' && window.musicGate && !window.musicGate.isChosen()) {
+        window.musicGate.request(() => showPage('daily-intro'));
+        return;
+      }
+      showPage(target === 'daily' ? 'daily-intro' : target);
+    });
+  });
+
+  document.getElementById('dailyIntroContinue').addEventListener('click', () => showPage('daily'));
+
+  backBtn.addEventListener('click', () => showPage('hub'));
+
+  window.showPage = showPage; // exposed for the envelope reset, if ever needed
+})();
+
+/* ============================================================
+   persistent music player (real audio via each song's src)
+   ============================================================ */
+(function music(){
+  const queueEl = document.getElementById('queue'), player = document.getElementById('floatingPlayer');
+  const miniVinyl = document.getElementById('miniVinyl'), playBtn = document.getElementById('playBtn');
+  const playIcon = document.getElementById('playIcon'), progBar = document.getElementById('progBar');
+  const npTitle = document.getElementById('npTitle'), npArtist = document.getElementById('npArtist');
+  const currentTime = document.getElementById('currentTime'), durationTime = document.getElementById('durationTime');
+  const playlistPanel = document.getElementById('playlistPanel'), playlistBtn = document.getElementById('playlistBtn');
+  const volumeControl = document.getElementById('volumeControl'), volumeValue = document.getElementById('volumeValue');
+  const queueLabel = document.getElementById('queueLabel'), switchEl = document.getElementById('playlistSwitch');
+  const allSwitchBtns = () => document.querySelectorAll('.switch-btn[data-playlist]');
+  const allQueueLabels = () => document.querySelectorAll('#queueLabel, #queueLabelPage');
+  const choiceOverlay = document.getElementById('choiceOverlay');
+  const audio = new Audio(); audio.preload = 'metadata'; let current = 0, playing = false;
+  const iconPlay = `<path d="M8 5v14l11-7z"/>`, iconPause = `<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>`;
+  const format = seconds => { seconds = Number.isFinite(seconds) ? Math.floor(seconds) : 0; return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`; };
+  const estimatedSeconds = song => { const bits = (song.duration || '0:00').split(':').map(Number); return bits[0] * 60 + (bits[1] || 0); };
+  audio.volume = Number(volumeControl.value);
+
+  /* ---------- two switchable playlists ---------- */
+  const PLAYLISTS = { ours: CONFIG.songs, top100: CONFIG.top100Songs || [] };
+  const LABELS = { ours: 'your songs — choose one to play', top100: 'the top 100, ranked — choose one to play' };
+  const EMPTY_LABEL = 'pick a playlist to begin';
+
+  /* no persistence on purpose — every fresh page load starts with nothing
+     chosen, so "one last thing" always requires an explicit pick first */
+  let chosen = false;
+  let activeKey = null;
+  let songs = [];
+
+  function requireChoice(){ if (!activeKey){ openChoiceModal(); return true; } return false; }
+
+  function rebuildQueue(){
+    queueEl.innerHTML = '';
+    if (!activeKey || !songs.length){
+      const row = document.createElement('div'); row.className = 'qrow queue-empty';
+      row.innerHTML = `<span class="meta"><span class="t">pick a playlist above to begin</span></span>`;
+      queueEl.appendChild(row);
+    } else {
+      songs.forEach((s, i) => {
+        const row = document.createElement('div'); row.className = 'qrow' + (i === current ? ' active' : '');
+        row.innerHTML = `<span class="num">${i+1}</span><span class="bars"><span></span><span></span><span></span></span><span class="meta"><span class="t">${s.title}</span><span class="a">${s.artist}</span></span><span class="dur">${s.duration}</span>`;
+        row.addEventListener('click', () => loadSong(i, true)); queueEl.appendChild(row);
+      });
+    }
+    allQueueLabels().forEach(el => el.textContent = activeKey ? (LABELS[activeKey] || LABELS.ours) : EMPTY_LABEL);
+    allSwitchBtns().forEach(btn => btn.classList.toggle('active', btn.dataset.playlist === activeKey));
+    document.querySelectorAll('.transport, .progress-row').forEach(el => el.classList.toggle('controls-locked', !activeKey));
+  }
+
+  function setPlaylist(key, autoplay){
+    if (!PLAYLISTS[key] || !PLAYLISTS[key].length) return;
+    activeKey = key; songs = PLAYLISTS[key];
+    rebuildQueue();
+    loadSong(0, autoplay);
+  }
+
+  function markChosen(){ chosen = true; }
+
+  function updateProgress(){
+    if (!songs.length){ progBar.style.width = '0%'; currentTime.textContent = '0:00'; durationTime.textContent = '0:00'; return; }
+    const total = audio.src && Number.isFinite(audio.duration) ? audio.duration : estimatedSeconds(songs[current]);
+    const elapsed = audio.src ? audio.currentTime : 0;
+    progBar.style.width = total ? `${(elapsed / total) * 100}%` : '0%'; currentTime.textContent = format(elapsed); durationTime.textContent = format(total);
+  }
+  function loadSong(i, autoplay){
+    if (!songs.length) return;
+    current = i; const s = songs[i];
+    [...queueEl.children].forEach((row, index) => row.classList.toggle('active', index === i));
+    npTitle.textContent = s.title; npArtist.textContent = s.artist; audio.pause(); audio.removeAttribute('src');
+    if (s.src) { audio.src = s.src; audio.load(); }
+    updateProgress();
+    if (autoplay) play(); else pause();
+  }
+  function play(){
+    if (!songs.length) return;
+    playing = true; miniVinyl.classList.add('playing'); playIcon.innerHTML = iconPause;
+    if (songs[current].src) audio.play().catch(() => pause());
+  }
+  function pause(){ playing = false; miniVinyl.classList.remove('playing'); playIcon.innerHTML = iconPlay; audio.pause(); }
+  function nextSong(){ if (songs.length) loadSong((current + 1) % songs.length, playing); }
+  function prevSong(){ if (songs.length) loadSong((current - 1 + songs.length) % songs.length, playing); }
+  playBtn.addEventListener('click', () => { if (requireChoice()) return; playing ? pause() : play(); });
+  document.getElementById('nextBtn').addEventListener('click', () => { if (requireChoice()) return; nextSong(); });
+  document.getElementById('prevBtn').addEventListener('click', () => { if (requireChoice()) return; prevSong(); });
+  audio.addEventListener('timeupdate', updateProgress); audio.addEventListener('loadedmetadata', updateProgress); audio.addEventListener('ended', nextSong);
+  document.getElementById('progressTrack').addEventListener('click', e => { if (requireChoice() || !audio.duration) return; const r = e.currentTarget.getBoundingClientRect(); audio.currentTime = ((e.clientX-r.left)/r.width)*audio.duration; });
+  playlistBtn.addEventListener('click', () => { const open = playlistPanel.classList.toggle('open'); playlistBtn.setAttribute('aria-expanded', open); });
+  document.getElementById('hidePlayerBtn').addEventListener('click', () => { player.classList.add('hidden'); document.getElementById('showPlayerBtn').classList.add('show'); });
+  document.getElementById('showPlayerBtn').addEventListener('click', () => { player.classList.remove('hidden'); document.getElementById('showPlayerBtn').classList.remove('show'); });
+  document.getElementById('openPlaylistBtn').addEventListener('click', () => { player.classList.remove('hidden'); document.getElementById('showPlayerBtn').classList.remove('show'); playlistPanel.classList.add('open'); playlistBtn.setAttribute('aria-expanded', 'true'); });
+  volumeControl.addEventListener('input', () => { audio.volume = Number(volumeControl.value); volumeValue.textContent = `${Math.round(audio.volume * 100)}%`; });
+
+  /* switching playlists from the player OR the Music page counts as an explicit choice */
+  allSwitchBtns().forEach(btn => {
+    btn.addEventListener('click', () => {
+      markChosen();
+      setPlaylist(btn.dataset.playlist, playing);
+    });
+  });
+
+  /* ---------- "one last thing": a real popup that must be answered ---------- */
+  let pendingChoiceCallback = null;
+  function openChoiceModal(onChosen){
+    pendingChoiceCallback = onChosen || null;
+    choiceOverlay.classList.add('open');
+  }
+  function closeChoiceModal(){ choiceOverlay.classList.remove('open'); }
+  document.querySelectorAll('[data-choose]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      markChosen();
+      setPlaylist(btn.dataset.choose, true);
+      closeChoiceModal();
+      const cb = pendingChoiceCallback; pendingChoiceCallback = null;
+      if (cb) cb();
+    });
+  });
+  document.querySelector('[data-goto="daily"]').addEventListener('click', () => {
+    if (chosen && !playing) play();
+  });
+  document.querySelector('[data-goto="music"]').addEventListener('click', () => {
+    if (!chosen) openChoiceModal();
+  });
+
+  /* exposed so the router can block navigation to "one last thing" until a
+     playlist has been chosen — see the router's [data-goto] handler above */
+  window.musicGate = {
+    isChosen: () => chosen,
+    request: (onChosen) => openChoiceModal(onChosen)
+  };
+
+  rebuildQueue();
+  if (activeKey && songs.length) loadSong(current, false);
+})();
+
+/* ============================================================
+   envelope open/close (fixed: only the flap/seal/back toggle it,
+   so clicking or scrolling inside the letter itself never
+   accidentally closes it back up)
+   ============================================================ */
+(function envelope(){
+  const env = document.getElementById('envelope');
+  const flap = document.getElementById('envFlap');
+  const seal = document.getElementById('envSeal');
+  const back = document.getElementById('envBack');
+  const hint = document.getElementById('envHint');
+  const close = document.getElementById('letterClose');
+
+  function setOpen(open){
+    env.classList.toggle('open', open);
+    hint.textContent = open ? 'use the × button to close the letter' : 'tap the envelope to open it';
+  }
+  function toggle(){ setOpen(!env.classList.contains('open')); }
+  [flap, seal, back].forEach(el => el.addEventListener('click', toggle));
+  close.addEventListener('click', () => setOpen(false));
+})();
+
+/* ============================================================
+   scratch / swipe petal-reveal
+   ============================================================ */
+function makeBouquetSVG(){
+  return `
+  <svg viewBox="0 0 200 240" width="72%" height="72%">
+    <g stroke="#808080" stroke-width="3" fill="none" stroke-linecap="round">
+      <path d="M100 230 L92 140"/>
+      <path d="M100 230 L108 150"/>
+      <path d="M100 230 L80 150"/>
+      <path d="M100 230 L120 145"/>
+    </g>
+    ${[[70,110,'#007FFF'],[100,90,'#b7c1cc'],[130,112,'#66b3ff'],[85,130,'#0058bf'],[115,132,'#eef4fb']].map(([cx,cy,col])=>`
+      <g transform="translate(${cx},${cy})">
+        ${[0,72,144,216,288].map(a=>`<ellipse cx="0" cy="-11" rx="7" ry="12" fill="${col}" opacity="0.92" transform="rotate(${a})"/>`).join('')}
+        <circle r="5" fill="#eef4fb"/>
+      </g>`).join('')}
+  </svg>`;
+}
+document.getElementById('bouquetUnder').innerHTML = CONFIG.bouquetUrl
+  ? `<img src="${CONFIG.bouquetUrl}" alt="bouquet">`
+  : makeBouquetSVG();
+
+function initScratch(frameId, canvasId){
+  const frame = document.getElementById(frameId);
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  let w, h, revealed = false;
+
+  function size(){
+    const r = frame.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return; // page hidden (display:none) — skip until visible
+    w = canvas.width = r.width;
+    h = canvas.height = r.height;
+    if (!revealed) drawCover();
+  }
+
+  function drawCover(){
+    const g = ctx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,'#1a3550');
+    g.addColorStop(0.5,'#142a40');
+    g.addColorStop(1,'#0f1f30');
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,w,h);
+    // petal pattern
+    ctx.fillStyle = 'rgba(0,127,255,0.18)';
+    for (let i=0;i<26;i++){
+      const x = (i * 53) % w + (i%2)*14;
+      const y = (i * 71) % h;
+      ctx.beginPath();
+      ctx.ellipse(x, y, 8, 4, Math.random()*Math.PI, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = '13px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('swipe across me', w/2, h/2);
+  }
+
+  size();
+  window.addEventListener('resize', size);
+  // re-measure once the page becomes visible (frame had 0 size while its .page was display:none)
+  new MutationObserver(() => requestAnimationFrame(size)).observe(frame.closest('.page'), { attributes:true, attributeFilter:['class'] });
+
+  function erase(x,y){
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x,y, 34, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function checkRevealed(){
+    if (revealed) return;
+    const data = ctx.getImageData(0,0,w,h).data;
+    let cleared = 0, total = 0;
+    for (let i=3;i<data.length;i+=4*40){ total++; if (data[i] < 30) cleared++; }
+    if (total && cleared/total > 0.5) revealAll();
+  }
+
+  function revealAll(){
+    if (revealed) return;
+    revealed = true;
+    ctx.clearRect(0,0,w,h);
+    canvas.style.transition = 'opacity .45s ease';
+    canvas.style.opacity = '0';
+    canvas.style.pointerEvents = 'none';
+  }
+
+  let drawing = false;
+  function pos(e){
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  }
+  function start(e){ drawing = true; const p = pos(e); erase(p.x,p.y); }
+  function move(e){
+    if(!drawing) return;
+    e.preventDefault();
+    const p = pos(e); erase(p.x,p.y); checkRevealed();
+  }
+  function end(){ drawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:true});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+  canvas.addEventListener('click', revealAll);
+}
+
+initScratch('bouquetFrame', 'bouquetCanvas');
+</script>
+
+</body>
+</html>
