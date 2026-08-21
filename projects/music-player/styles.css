@@ -1,0 +1,611 @@
+/* Far Away — music player
+   Azure-toned dark theme with a live, typewriter-style lyric line. */
+
+:root {
+  --azure: #007FFF;
+  --azure-light: #4DA3FF;
+  --azure-deep: #0047AB;
+  --azure-glow: rgba(0, 127, 255, 0.35);
+  --ink: #0A0E16;
+  --surface: #131A26;
+  --surface-raised: #0D121C;
+  --mist: #8A97AC;
+  --hairline: rgba(0, 127, 255, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Fluid base size: a bit smaller on phones, a bit larger on big screens */
+  font-size: clamp(15px, 0.9vw + 12px, 18px);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(0, 127, 255, 0.14), transparent 55%),
+    var(--ink);
+  color: #ffffff;
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+
+/* Holds the player + the suggestions sidebar. Plain flex-wrap does all
+   the responsive work: side-by-side when there's room (desktop/wide
+   tablet), stacked underneath once there isn't (phones/narrow
+   tablets) — no separate mobile layout needed. */
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 24px);
+  width: 100%;
+  max-width: 960px;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+/* The player card. Fluid between phone and desktop widths instead of
+   jumping at fixed breakpoints. */
+.player {
+  width: 100%;
+  max-width: min(640px, 94vw);
+  margin: clamp(16px, 4vh, 56px) 16px;
+  padding: clamp(20px, 3vw, 40px);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 127, 255, 0.04);
+}
+
+/* Now playing header */
+.now-playing {
+  margin-bottom: 20px;
+}
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--azure-light);
+}
+.song-title {
+  margin: 6px 0 2px;
+  font-size: clamp(1.4rem, 1.05rem + 1.3vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.artist {
+  margin: 0;
+  color: var(--mist);
+  font-size: 1rem;
+}
+
+/* Section labels */
+.section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: var(--mist);
+  margin: 0 0 10px;
+}
+
+/* YouTube link input */
+.youtube-input {
+  margin-bottom: 20px;
+}
+.youtube-form {
+  display: flex;
+  gap: 8px;
+}
+.youtube-field {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-raised);
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+.youtube-field::placeholder {
+  color: var(--mist);
+}
+.youtube-field:focus-visible {
+  outline: 2px solid var(--azure-light);
+  outline-offset: 2px;
+}
+.youtube-submit {
+  flex-shrink: 0;
+  padding: 0 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--azure) 0%, var(--azure-deep) 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: box-shadow .2s ease, transform .15s ease;
+}
+.youtube-submit:hover {
+  box-shadow: 0 6px 16px var(--azure-glow);
+}
+.youtube-submit:active {
+  transform: scale(0.97);
+}
+.youtube-hint {
+  margin: 8px 2px 0;
+  font-size: 0.8rem;
+  color: var(--mist);
+  min-height: 1.1em;
+}
+.youtube-hint.is-error {
+  color: #ff6b6b;
+}
+
+/* Now-playing bar: just the custom audio controls. No video is shown —
+   the YouTube embed that actually produces the sound is shrunk down
+   to an invisible 1x1 mount point below, rather than removed from the
+   DOM (fully display:none-ing it tends to make some browsers pause or
+   throttle the audio). */
+.player-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  padding: 14px 18px;
+  background: var(--surface-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+}
+.player-bar[hidden] {
+  display: none;
+}
+
+.yt-audio-mount {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.yt-audio-mount iframe {
+  width: 1px;
+  height: 1px;
+  border: 0;
+}
+
+.player-controls {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.play-pause {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--azure) 0%, var(--azure-deep) 100%);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 6px 16px var(--azure-glow);
+  transition: transform .15s ease;
+}
+.play-pause:hover {
+  transform: scale(1.05);
+}
+.play-pause:active {
+  transform: scale(0.95);
+}
+.play-pause:focus-visible {
+  outline: 2px solid var(--azure-light);
+  outline-offset: 2px;
+}
+
+.progress-track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  /* Taller than the visible bar on purpose — this is the touch/click
+     hit area. The visible bar itself is the .progress-bg / .progress-fill
+     pair, centered inside it via top:50%. */
+  height: 24px;
+  cursor: pointer;
+  touch-action: none;
+}
+.progress-bg {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--hairline);
+  transform: translateY(-50%);
+}
+.progress-fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 4px;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--azure);
+  transform: translateY(-50%);
+}
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.progress-track:hover .progress-fill::after,
+.progress-track.is-seeking .progress-fill::after {
+  opacity: 1;
+}
+
+.time-label {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  color: var(--mist);
+}
+
+.volume-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--mist);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color .15s ease;
+}
+.volume-btn:hover {
+  color: #ffffff;
+}
+.volume-btn:focus-visible {
+  outline: 2px solid var(--azure-light);
+  outline-offset: 2px;
+}
+
+.volume-slider {
+  flex-shrink: 0;
+  width: 80px;
+  accent-color: var(--azure);
+  cursor: pointer;
+}
+
+/* Lyrics */
+.lyrics-panel {
+  margin-top: 24px;
+  border-top: 1px solid var(--hairline);
+  padding-top: 16px;
+}
+.lyrics-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.lyrics-panel h2 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: var(--mist);
+  margin: 0;
+}
+
+.sync-adjust {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sync-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--mist);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+.sync-btn:hover {
+  color: #ffffff;
+  border-color: var(--azure-glow);
+}
+.sync-btn:focus-visible {
+  outline: 2px solid var(--azure-light);
+  outline-offset: 2px;
+}
+.sync-offset {
+  min-width: 34px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--mist);
+}
+/* Escalator-style lyrics: a tall viewport clips to exactly 3 rows, and
+   an inner track holding every line slides vertically so the active
+   line is always centered — the line above is what already played,
+   the line below is what's coming up. */
+.lyrics-viewport {
+  position: relative;
+  height: calc(3 * clamp(2.2rem, 1.8rem + 1.2vw, 2.9rem));
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+}
+
+.lyrics-track {
+  display: flex;
+  flex-direction: column;
+  transition: transform .45s cubic-bezier(.22, 1, .36, 1);
+  will-change: transform;
+}
+
+.lyrics-line {
+  height: clamp(2.2rem, 1.8rem + 1.2vw, 2.9rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 8px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--mist);
+  font-size: clamp(0.9rem, 0.8rem + 0.35vw, 1.05rem);
+  opacity: 0.4;
+  transition: color .3s ease, opacity .3s ease, font-size .3s ease;
+}
+
+/* The line currently playing — big, bright, front and center */
+.lyrics-line.is-current {
+  position: relative;
+  color: #ffffff;
+  opacity: 1;
+  font-size: clamp(1.1rem, 0.9rem + 0.8vw, 1.5rem);
+}
+
+/* Just-played / up-next rows — dimmer, smaller, already visible via
+   the default .lyrics-line rule above, but named for clarity and in
+   case they need their own tweaks later. */
+.lyrics-line.is-prev,
+.lyrics-line.is-next {
+  color: var(--mist);
+  opacity: 0.45;
+}
+
+/* Blinking "cursor" after the active lyric line, like a live caption */
+.lyrics-line.is-current::after {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  margin-left: 3px;
+  vertical-align: -0.15em;
+  background: var(--azure-light);
+  animation: cursor-blink 1s steps(1) infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyrics-track {
+    transition: none;
+  }
+  .lyrics-line.is-current::after {
+    animation: none;
+    opacity: .6;
+  }
+}
+
+/* Song suggestions sidebar */
+.suggestions {
+  width: 260px;
+  flex-shrink: 0;
+  flex-grow: 1;
+  max-width: 320px;
+  padding: clamp(18px, 2.5vw, 28px);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 127, 255, 0.04);
+  align-self: flex-start;
+}
+.suggestions .section-label {
+  margin-bottom: 14px;
+}
+
+.artist-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.artist-chip {
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-raised);
+  color: var(--mist);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.artist-chip:hover {
+  color: #ffffff;
+  border-color: var(--azure-glow);
+}
+.artist-chip:focus-visible {
+  outline: 2px solid var(--azure-light);
+  outline-offset: 2px;
+}
+.artist-chip.is-selected {
+  background: linear-gradient(135deg, var(--azure) 0%, var(--azure-deep) 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 12px var(--azure-glow);
+}
+
+.suggestion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 2px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--azure-deep) transparent;
+}
+.suggestion-list::-webkit-scrollbar {
+  width: 6px;
+}
+.suggestion-list::-webkit-scrollbar-thumb {
+  background: var(--azure-deep);
+  border-radius: 999px;
+}
+
+.suggestion-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .15s ease, border-color .15s ease, transform .1s ease;
+}
+.suggestion-item:hover {
+  background: var(--surface-raised);
+  border-color: var(--hairline);
+}
+.suggestion-item:active {
+  transform: scale(0.98);
+}
+.suggestion-item:focus-visible {
+  outline: 2px solid var(--azure-light);
+  outline-offset: 2px;
+}
+.suggestion-item.is-playing {
+  background: var(--surface-raised);
+  border-color: var(--azure-glow);
+}
+.suggestion-item.is-playing .suggestion-track {
+  color: var(--azure-light);
+}
+
+.suggestion-track {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.3;
+}
+.suggestion-artist {
+  font-size: 0.78rem;
+  color: var(--mist);
+}
+
+/* Phones */
+@media (max-width: 420px) {
+  .player {
+    padding: 18px;
+    margin: 12px 10px;
+    border-radius: 16px;
+  }
+  .youtube-form {
+    flex-direction: column;
+  }
+  .youtube-submit {
+    padding: 11px 0;
+  }
+  .player-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .player-controls {
+    width: 100%;
+  }
+  .volume-slider {
+    width: 60px;
+  }
+  .suggestions {
+    width: 100%;
+    max-width: none;
+    margin: 0 10px;
+    padding: 18px;
+  }
+}
+
+/* Tablets and up: a little extra breathing room */
+@media (min-width: 700px) {
+  .player {
+    padding: 44px;
+  }
+}
+
+/* Footer credit */
+.credit {
+  width: 100%;
+  max-width: min(640px, 94vw);
+  margin: 0 auto clamp(16px, 4vh, 40px);
+  padding: 0 16px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--mist);
+  letter-spacing: 0.2px;
+}
+.credit-name {
+  color: var(--azure-light);
+  font-weight: 700;
+}

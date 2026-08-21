@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Contact — Kled</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <script>if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');</script>
+
+    <header>
+        <nav>
+            <a href="index.html" class="logo">&lt;Kled/&gt;</a>
+
+            <button id="navToggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+
+            <ul id="navLinks">
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#skills">Skills</a></li>
+                <li><a href="index.html#projects">Projects</a></li>
+                <li><a href="contact.html" class="active">Contact</a></li>
+            </ul>
+
+            <button id="theme" class="theme-toggle" aria-label="Toggle dark mode">
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            </button>
+        </nav>
+
+        <section class="hero contact-hero">
+            <p class="eyebrow">// contact</p>
+            <h1>Let's build something.</h1>
+            <p class="terminal-sub contact-lede">Got a project, a question, or an opportunity? Send a message below, or reach out directly.</p>
+        </section>
+    </header>
+
+    <main>
+        <section class="contact-wrap reveal">
+            <div class="terminal contact-terminal">
+                <div class="terminal-bar">
+                    <span class="term-dot red"></span>
+                    <span class="term-dot yellow"></span>
+                    <span class="term-dot green"></span>
+                    <span class="terminal-title">contact@kled-portfolio</span>
+                </div>
+                <div class="terminal-body">
+                    <form id="f">
+                        <div class="field">
+                            <label for="n">Name</label>
+                            <input id="n" type="text" placeholder="Your name">
+                        </div>
+                        <div class="field">
+                            <label for="e">Email</label>
+                            <input id="e" type="email" placeholder="you@example.com">
+                        </div>
+                        <div class="field">
+                            <label for="m">Message</label>
+                            <textarea id="m" placeholder="What's on your mind?"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                    <p id="msg"></p>
+                </div>
+            </div>
+
+            <aside class="info-card">
+                <h3>Direct contact</h3>
+                <ul class="info-list">
+                    <li class="info-item">
+                        <span class="info-label">Email</span>
+                        <a href="mailto:youremail@example.com">youremail@example.com</a>
+                    </li>
+                    <li class="info-item">
+                        <span class="info-label">Location</span>
+                        <span>Philippines</span>
+                    </li>
+                    <li class="info-item">
+                        <span class="info-label">Response time</span>
+                        <span>Usually within 1–2 days</span>
+                    </li>
+                </ul>
+
+                <div class="social-row">
+                    <a href="#" class="social-btn" aria-label="GitHub">GH</a>
+                    <a href="#" class="social-btn" aria-label="LinkedIn">in</a>
+                </div>
+                <p class="info-note">Swap the placeholders above with your real email and profile links.</p>
+            </aside>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Kled. Built with HTML, CSS &amp; JavaScript.</p>
+    </footer>
+
+    <button id="top" class="scroll-top" aria-label="Scroll to top">↑</button>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
