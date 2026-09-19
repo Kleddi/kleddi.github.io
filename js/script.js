@@ -217,3 +217,100 @@ if (projectList) {
     // 4. Draw once on load, before the user touches anything.
     updateGallery();
 }
+
+// ---------------------------------------------------------------
+// Searchable tools list (homepage only) — Option B from the badge:
+// same "array is the truth" pattern as the project gallery above,
+// but as its own independent section with its own data and its own
+// pair of worker/draw functions.
+// ---------------------------------------------------------------
+const toolsList = document.getElementById('tools-list');
+
+if (toolsList) {
+
+    // 1. THE DATA — one array of objects, each with name, category,
+    // and level (1–5).
+    const tools = [
+        { name: 'Python', category: 'Language', level: 5 },
+        { name: 'Java', category: 'Language', level: 4 },
+        { name: 'JavaScript', category: 'Language', level: 3 },
+        { name: 'HTML', category: 'Frontend', level: 3 },
+        { name: 'CSS', category: 'Frontend', level: 3 },
+        { name: 'Git', category: 'Tooling', level: 4 },
+        { name: 'VS Code', category: 'Tooling', level: 5 },
+        { name: 'Wireshark', category: 'Security', level: 3 },
+        { name: 'Burp Suite', category: 'Security', level: 2 },
+        { name: 'Linux', category: 'Tooling', level: 3 }
+    ];
+
+    const toolsSearchInput = document.getElementById('toolsSearch');
+    const toolsCategorySelect = document.getElementById('toolsCategory');
+    const toolsCountEl = document.getElementById('toolsCount');
+
+    // Build the category <select> options from the data itself.
+    if (toolsCategorySelect) {
+        const categories = [...new Set(tools.map(tool => tool.category))];
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            toolsCategorySelect.appendChild(option);
+        });
+    }
+
+    // 2. THE WORKER FUNCTION — takes the list plus the user's current
+    // filters and returns a new list. It never touches the page.
+    function filterTools(list, query, category) {
+        const cleanQuery = query.trim().toLowerCase();
+
+        return list.filter(tool => {
+            const matchesCategory = category === 'All' || tool.category === category;
+            const matchesQuery = cleanQuery === '' || tool.name.toLowerCase().includes(cleanQuery);
+            return matchesCategory && matchesQuery;
+        });
+    }
+
+    // 3. THE DRAW FUNCTION — the only place in this section that writes
+    // to the page. A badge of "Strong" is decided here, in code, for
+    // anything at level 4 or above.
+    function renderTools(list) {
+        if (list.length === 0) {
+            toolsList.innerHTML = '<p class="gallery-empty">No tools match that search.</p>';
+        } else {
+            let html = '';
+            for (const tool of list) {
+                const isStrong = tool.level >= 4;
+                html += `
+                    <li class="tool-item">
+                        <div class="tool-main">
+                            <span class="tool-name">${tool.name}</span>
+                            <span class="tool-category">${tool.category}</span>
+                        </div>
+                        <span class="tool-badge${isStrong ? ' is-strong' : ''}">${isStrong ? 'Strong' : `Level ${tool.level}`}</span>
+                    </li>
+                `;
+            }
+            toolsList.innerHTML = html;
+        }
+
+        toolsCountEl.textContent = `Showing ${list.length} of ${tools.length} tools`;
+    }
+
+    function updateTools() {
+        const query = toolsSearchInput ? toolsSearchInput.value : '';
+        const category = toolsCategorySelect ? toolsCategorySelect.value : 'All';
+        const filtered = filterTools(tools, query, category);
+        renderTools(filtered);
+    }
+
+    if (toolsSearchInput) {
+        toolsSearchInput.addEventListener('input', updateTools);
+    }
+
+    if (toolsCategorySelect) {
+        toolsCategorySelect.addEventListener('change', updateTools);
+    }
+
+    // 4. Draw once on load, before the user touches anything.
+    updateTools();
+}
