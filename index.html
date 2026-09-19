@@ -116,32 +116,26 @@
         <section id="projects" class="reveal">
             <p class="eyebrow">// projects</p>
             <h2>Projects</h2>
-            <div class="cards">
-                <a class="card" href="projects/music-player/index.html" target="_blank" rel="noopener noreferrer">
-                    <img src="images/music-player.jpg" alt="Music Player app showing a Now Playing panel with a YouTube link field and synced lyrics timer">
-                    <div class="card-body">
-                        <h3>Music Player</h3>
-                        <p>A YouTube-powered player with synced lyric timing and a curated song suggestion panel.</p>
-                        <span class="card-link">Open project →</span>
-                    </div>
-                </a>
-                <a class="card" href="projects/surprise/index.html" target="_blank" rel="noopener noreferrer">
-                    <img src="images/surprise.jpg" alt="A dark passcode entry screen with a numeric keypad">
-                    <div class="card-body">
-                        <h3>Surprise Page</h3>
-                        <p>A passcode-locked hidden page — enter the right code to see what's behind it.</p>
-                        <span class="card-link">Open project →</span>
-                    </div>
-                </a>
-                <a class="card" href="#top">
-                    <img src="images/portfolio.jpg" alt="Screenshot of this portfolio site's homepage">
-                    <div class="card-body">
-                        <h3>Portfolio</h3>
-                        <p>This site — designed and built from scratch with HTML, CSS, and JavaScript.</p>
-                        <span class="card-link">Back to top ↑</span>
-                    </div>
-                </a>
+
+            <!-- Data-driven, filterable project gallery. script.js owns
+                 the real list (the array) and builds everything below
+                 from it — this markup only supplies the controls and
+                 an empty container for the render function to fill. -->
+            <div class="gallery-controls">
+                <input
+                    type="search"
+                    id="gallerySearch"
+                    class="gallery-search"
+                    placeholder="Search projects…"
+                    autocomplete="off"
+                >
+                <div class="gallery-tags" id="galleryTags"></div>
             </div>
+
+            <p class="gallery-count" id="galleryCount"></p>
+
+            <!-- JavaScript fills this. It is empty on purpose. -->
+            <div class="cards" id="project-list"></div>
         </section>
     </main>
 
@@ -151,6 +145,6 @@
 
     <button id="top" class="scroll-top" aria-label="Scroll to top">↑</button>
 
-    <script src="js/script.js"></script>
+    <script src="js/script.js" defer></script>
 </body>
 </html>
