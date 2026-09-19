@@ -1,0 +1,62 @@
+# Place this file at the ROOT of your "kleddi.github.io" repo (the one
+# that already controls your main domain), so it ends up served at:
+#   https://kleddi.github.io/robots.txt
+#
+# IMPORTANT: if that repo already has a robots.txt, merge these rules
+# into it instead of replacing the whole file -- don't overwrite any
+# existing Disallow/Allow lines for your main site.
+#
+# Unlike the earlier version, this one only blocks the /secretthingforme/
+# path -- the rest of kleddi.github.io (your main site) stays crawlable.
+
+User-agent: *
+Disallow: /secretthingforme/
+
+# --- Known AI training / assistant crawlers, blocked explicitly on this path ---
+User-agent: GPTBot
+Disallow: /secretthingforme/
+
+User-agent: ChatGPT-User
+Disallow: /secretthingforme/
+
+User-agent: CCBot
+Disallow: /secretthingforme/
+
+User-agent: Google-Extended
+Disallow: /secretthingforme/
+
+User-agent: anthropic-ai
+Disallow: /secretthingforme/
+
+User-agent: ClaudeBot
+Disallow: /secretthingforme/
+
+User-agent: Claude-Web
+Disallow: /secretthingforme/
+
+User-agent: PerplexityBot
+Disallow: /secretthingforme/
+
+User-agent: Bytespider
+Disallow: /secretthingforme/
+
+User-agent: Amazonbot
+Disallow: /secretthingforme/
+
+User-agent: Applebot-Extended
+Disallow: /secretthingforme/
+
+User-agent: Diffbot
+Disallow: /secretthingforme/
+
+User-agent: cohere-ai
+Disallow: /secretthingforme/
+
+User-agent: Omgilibot
+Disallow: /secretthingforme/
+
+User-agent: YouBot
+Disallow: /secretthingforme/
+
+User-agent: FacebookBot
+Disallow: /secretthingforme/
